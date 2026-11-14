@@ -2,7 +2,7 @@ import {useState} from 'react';
 import {NavLink,Outlet,useLocation,useNavigate} from 'react-router-dom';
 import {Activity,CalendarDays,ChartNoAxesCombined,ChevronDown,ChevronLeft,HeartHandshake,HeartPulse,House,LayoutGrid,LogOut,Menu,MessageCircle,PanelLeftClose,Pill,Settings,ShieldAlert,Stethoscope,UserCircle2,X} from 'lucide-react';
 import {useSession} from '../hooks/session';
-const primary=[{path:'/',label:'Overview',icon:House},{path:'/medications',label:'Medications',icon:Pill},{path:'/check-in',label:'Daily check-in',icon:Activity},{path:'/progress',label:'My recovery',icon:ChartNoAxesCombined},{path:'/assistant',label:'Recovery assistant',icon:MessageCircle},{path:'/alerts',label:'Safety & alerts',icon:ShieldAlert}];
+const primary=[{path:'/',label:'Overview',icon:House},{path:'/medications',label:'Medications',icon:Pill},{path:'/check-in',label:'Daily check-in',icon:Activity},{path:'/progress',label:'My recovery',icon:ChartNoAxesCombined},{path:'/assistant',label:'Clara assistant',icon:MessageCircle},{path:'/alerts',label:'Safety & alerts',icon:ShieldAlert}];
 const secondary=[{path:'/features',label:'All features',icon:LayoutGrid},{path:'/caregivers',label:'Caregiver access',icon:HeartHandshake},{path:'/appointments',label:'Appointments',icon:CalendarDays},{path:'/messages',label:'Care messages',icon:Stethoscope},{path:'/settings',label:'Settings',icon:Settings}];
 function SideNav({onNavigate}:{onNavigate:()=>void}){
  const {patient,signOut}=useSession();

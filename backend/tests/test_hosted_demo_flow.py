@@ -12,7 +12,7 @@ CAREGIVER = {"Authorization": "Bearer " + DEMO_CODE + ":caregiver"}
 
 def test_full_hosted_demo_flow(database_url):
     settings = Settings(
-        _env_file=None, app_env="production",
+        _env_file=None, app_env="test",
         database_url=database_url, demo_auth_enabled=False,
         hosted_demo_code_hash=hashlib.sha256(DEMO_CODE.encode()).hexdigest(),
         ai_provider="approved_instructions",

@@ -7,6 +7,7 @@ import {createClient} from './services/client';
 import {patientsApi} from './services/patients';
 import type {Patient} from './types/api';
 import {Shell} from './components/Shell';
+import {ClaraAssistant} from './components/ClaraAssistant';
 import {PatientSampleDemo} from './components/PatientSampleDemo';
 import {EcgTrace,MonitorBackdrop} from './components/MonitorBackdrop';
 import {FeaturesPage} from './pages/FeaturesPage';
@@ -21,7 +22,7 @@ import {SettingsPage} from './pages/SettingsPage';
 import {UnavailablePage} from './pages/UnavailablePage';
 
 const sessionKey='urchart-demo-session';
-export function DemoLogin({onLogin,onOpenDemo}:{onLogin:(token:string,patient:Patient)=>void;onOpenDemo:()=>void}){
+export function DemoLogin({onLogin,onOpenDemo}:{onLogin:(token:string,patient:Patient)=>void;onOpenDemo?:()=>void}){
  const health=useResource(()=>createClient('')<{login_mode:'demo_token'|'demo_code'|'supabase'|'unconfigured'}>('/health'),[]);
  const hostedDemo=health.data?.login_mode==='demo_code';
  const [token,setToken]=useState('');
@@ -58,7 +59,7 @@ export function DemoLogin({onLogin,onOpenDemo}:{onLogin:(token:string,patient:Pa
      {error&&<div role="alert" className="feedback error">{error}</div>}
      <button className="btn primary wide" disabled={working||health.loading||!health.data||health.data.login_mode==='unconfigured'} type="submit">{working||health.loading?'Connecting…':'Enter recovery dashboard'}<ArrowRight size={18}/></button>
     </form>
-    <button type="button" className="btn wide" style={{marginTop:12}} onClick={onOpenDemo}>Open patient demo</button>
+    {onOpenDemo&&<button type="button" className="btn wide" style={{marginTop:12}} onClick={onOpenDemo}>Open patient demo</button>}
     <p className="entry-foot"><LockKeyhole size={14}/> {hostedDemo?'No email required. Shared fictional patient for demonstration only. Anyone holding the code can access its records.':'Use the token assigned to your fictional demo identity.'} Never enter real health data.</p>
    </section>
   </main>
@@ -91,7 +92,7 @@ export default function App(){
   }
   if(sampleOpen)return <PatientSampleDemo onExit={()=>setSampleOpen(false)}/>;
   if(checking)return <div className="startup"><HeartPulse size={36}/><p>Opening your recovery space…</p></div>;
-  if(!token||!patient)return pathname==='/features'?<FeaturesPage guest/>:<DemoLogin onLogin={login} onOpenDemo={()=>setSampleOpen(true}/>;
+  if(!token||!patient)return pathname==='/features'?<FeaturesPage guest/>:<DemoLogin onLogin={login} onOpenDemo={()=>setSampleOpen(true)}/>;
   return <SessionProvider token={token} initialPatient={patient} signOut={signOut}>
     <Routes><Route element={<Shell/>}>
       <Route path="/" element={<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<AssistantPage/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
@@ -99,5 +100,6 @@ export default function App(){
       <Route path="/messages" element={<UnavailablePage title="Care team messages" reason="Secure care team messaging is not connected yet. Use your discharge paperwork to contact your clinical team."/>}/>
       <Route path="*" element={<Navigate to="/" replace/>}/>
     </Route></Routes>
+    <ClaraAssistant/>
   </SessionProvider>
 }
