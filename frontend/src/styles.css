@@ -346,3 +346,18 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display
 .operation-category{font-size:12px;color:#b0d3bd;margin:0}
 .operation-overview .operation-disclaimer{border-top:1px solid #315642;padding-top:11px;margin:15px 0 0;color:#b4d6c0;font-size:11px}
 @media(max-width:600px){.operation-setup{padding:19px 16px;border-radius:17px}.operation-setup h2{font-size:22px}.operation-overview{padding:16px 14px}.operation-overview h2{font-size:17px}.operation-overview ul{font-size:12px}.operation-setup-backdrop{padding:10px}}
+
+
+/* Evidence-linked rehabilitation timeline and selectable operation date. */
+.operation-picker input[type="date"]{width:100%;min-height:46px;background:#143628;border:1px solid #4b9268;color:#f2fff7;color-scheme:dark;font-size:16px}
+.operation-date-help{font-size:11px!important;color:#b5d0c0!important;margin:7px 0 0!important}
+.operation-phases{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0 14px}
+.operation-phase{border:1px solid #315941;background:#102b20;border-radius:10px;padding:11px 12px;display:flex;flex-direction:column;gap:5px;font-size:12px;color:#c4ddcf;min-width:0}
+.operation-phase strong{line-height:1.4;font-size:12px;font-weight:650}
+.operation-phase.current{border-color:#4dec9a;background:#153d29;color:#f0fff5;box-shadow:inset 3px 0 #4dec9a}
+.operation-phase span{font-size:10px;font-weight:750;color:#6dffac}
+.operation-phase-hint{font-size:12px;color:#bedac9;margin:10px 0}
+.operation-sources{border-top:1px solid #315642;margin-top:17px;padding-top:12px;display:grid;gap:7px}
+.operation-sources strong{font-size:12px;color:#e0fae8}
+.operation-sources a{font-size:12px;text-decoration:underline;text-underline-offset:3px;color:#88eeb2;overflow-wrap:anywhere}
+@media(max-width:480px){.operation-phases{grid-template-columns:minmax(0,1fr);gap:7px}.operation-phase{padding:10px 11px}.operation-overview h3{margin-top:14px}}
