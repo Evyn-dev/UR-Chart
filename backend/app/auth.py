@@ -1,4 +1,7 @@
 import secrets
+from uuid import UUID
+
+import httpx
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy import select
@@ -13,20 +16,46 @@ def get_db(request: Request):
         yield session
 
 
-def current_patient(request: Request, credentials: HTTPAuthorizationCredentials | None = Depends(bearer), db=Depends(get_db)):
-    settings = request.app.state.settings
-    if not settings.demo_auth_enabled:
-        raise HTTPException(503, "Authentication provider not configured")
-    identity = None
-    if credentials:
-        for token, user in settings.demo_tokens.items():
-            if secrets.compare_digest(credentials.credentials.encode(), token.encode()):
-                identity = user
-    if identity is None:
+def authenticated_identity(settings, credentials):
+    """Verify bearer tokens server-side, never from unverified JWT claims."""
+    if not credentials:
         raise HTTPException(401, "Valid bearer token required", headers={"WWW-Authenticate": "Bearer"})
+    token = credentials.credentials
+    if settings.demo_auth_enabled:
+        for secret, user in settings.demo_tokens.items():
+            if secrets.compare_digest(token.encode(), secret.encode()):
+                return user
+        raise HTTPException(401, "Valid bearer token required", headers={"WWW-Authenticate": "Bearer"})
+
+    if settings.supabase_url and settings.supabase_publishable_key:
+        try:
+            response = httpx.get(
+                settings.supabase_url.rstrip("/") + "/auth/v1/user",
+                headers={
+                    "apikey": settings.supabase_publishable_key,
+                    "Authorization": "Bearer " + token,
+                },
+                timeout=8,
+            )
+        except httpx.RequestError:
+            raise HTTPException(503, "Authentication service unavailable") from None
+        if response.status_code in (401, 403):
+            raise HTTPException(401, "Your session has expired. Please sign in again.") from None
+        if response.status_code != 200:
+            raise HTTPException(503, "Authentication service unavailable")
+        try:
+            user_id = str(UUID(response.json()["id"]))
+        except (ValueError, TypeError, KeyError, AttributeError):
+            raise HTTPException(503, "Unexpected authentication response") from None
+        return "supabase:" + user_id
+    raise HTTPException(503, "Authentication provider not configured")
+
+
+def current_patient(request: Request, credentials: HTTPAuthorizationCredentials | None = Depends(bearer), db=Depends(get_db)):
+    identity = authenticated_identity(request.app.state.settings, credentials)
     patient = db.scalar(select(Patient).where(Patient.user_id == identity))
     if patient is None:
-        patient = Patient(user_id=identity)
+        patient = Patient(user_id=identity, display_name="Synthetic patient")
         db.add(patient)
         try:
             db.commit()
