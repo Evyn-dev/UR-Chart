@@ -1,5 +1,5 @@
 """Shared Redis-backed API rate limiting; production fails closed if Redis is unavailable."""
-from redis import Redis
+from redis.asyncio import Redis
 from redis.exceptions import RedisError
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
@@ -29,13 +29,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             pipe = self.redis.pipeline()
             pipe.incr(key)
             pipe.expire(key, window + 5)
-            count, _ = pipe.execute()
+            count, _ = await pipe.execute()
             if path == "/api/caregivers/invitations" and request.method == "POST":
                 hour_key = f"ur-chart:invite:{peer}:{int(__import__('time').time()) // 3600}"
                 invite_pipe = self.redis.pipeline()
                 invite_pipe.incr(hour_key)
                 invite_pipe.expire(hour_key, 3605)
-                invite_count, _ = invite_pipe.execute()
+                invite_count, _ = await invite_pipe.execute()
                 if invite_count > self.invite_limit:
                     return JSONResponse(status_code=429, content={"error":{"code":"rate_limit_exceeded","message":"Too many caregiver invitations. Try again later."}}, headers={"Retry-After":"3600"})
             if count > limit:
