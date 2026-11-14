@@ -11,7 +11,7 @@ from app.schemas import ErrorResponse
 
 def create_app(settings=None, engine=None, provider=None):
     settings = settings or Settings()
-    engine = engine or make_engine(settings.database_url)
+    engine = engine or make_engine(settings.database_url, database_schema=settings.database_schema)
 
     @asynccontextmanager
     async def lifespan(app):
