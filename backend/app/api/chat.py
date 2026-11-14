@@ -1,8 +1,10 @@
 from uuid import UUID
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, Query, Request, HTTPException
 from sqlalchemy import select
 from app.auth import current_patient, get_db
-from app.models import Conversation, Message, RecoveryPlan, Medication, Checkin, Alert
+from app.models import Conversation, Message, RecoveryPlan, Medication, MedicationLog, Checkin, Alert
 from app.schemas import Data, ChatCreate, ChatOut, ConversationOut, ConversationDetail
 from app.services.records import owned, listing
 from app.services.ai import PatientContext, AIUnavailable, respond
@@ -32,19 +34,37 @@ def message(body: ChatCreate, request: Request, patient=Depends(current_patient)
     ).order_by(Medication.created_at.desc()).limit(10)).all()
     checkins = db.scalars(select(Checkin).where(
         Checkin.patient_id == patient.id
-    ).order_by(Checkin.day.desc()).limit(5)).all()
+    ).order_by(Checkin.day.desc()).limit(7)).all()
     alerts = db.scalars(select(Alert).where(
         Alert.patient_id == patient.id
     ).order_by(Alert.created_at.desc()).limit(5)).all()
+    # The local AI receives only this authenticated patient's recent dose logs.
+    # Logged statuses are reported as entered, never inferred from missing events.
+    current_day = datetime.now(ZoneInfo(patient.timezone)).date()
+    lower_bound = datetime.combine(current_day - timedelta(days=6), datetime.min.time(), ZoneInfo(patient.timezone)).astimezone(timezone.utc)
+    medication_names = {m.id: m.name for m in medications}
+    dose_logs = db.scalars(select(MedicationLog).where(
+        MedicationLog.medication_id.in_(list(medication_names)),
+        MedicationLog.recorded_at >= lower_bound,
+    ).order_by(MedicationLog.recorded_at.desc()).limit(45)).all() if medication_names else []
     import json
     snapshot = json.dumps({
         "active_medications": [{
             "name": m.name, "dosage_as_entered": m.dosage,
             "schedule_as_entered": m.schedule
         } for m in medications],
+        "recent_medication_dose_logs": [{
+            "medication": medication_names.get(log.medication_id, "Medication"),
+            "status_as_recorded": log.status,
+            "recorded_at": log.recorded_at.isoformat(),
+            "scheduled_for": log.scheduled_for.isoformat() if log.scheduled_for else None,
+            "sample_note": log.note,
+        } for log in dose_logs],
         "recent_checkins": [{
             "day": c.day.isoformat(), "pain_level": c.pain_level,
-            "wellbeing": c.wellbeing, "symptoms_as_entered": c.symptoms
+            "wellbeing": c.wellbeing, "symptoms_as_entered": c.symptoms,
+            "activity_minutes": c.activity_minutes, "activity_type": c.activity_type,
+            "patient_note": c.note
         } for c in checkins],
         "recent_alerts": [{
             "category": a.category, "severity": a.severity, "status": a.status
