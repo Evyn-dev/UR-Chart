@@ -13,6 +13,9 @@ import {FeaturesPage} from './pages/FeaturesPage';
 import {Dashboard,MedicationsPage,CheckinPage,ProgressPage,AlertsPage,CaregiversPage,SettingsPage,UnavailablePage} from './pages/Pages';
 
 const sessionKey='urchart-demo-session';
+const readSession=()=>{try{return sessionStorage.getItem(sessionKey)||''}catch{return ''}};
+const saveSession=(token:string)=>{try{if(token)sessionStorage.setItem(sessionKey,token);else sessionStorage.removeItem(sessionKey)}catch{/* Storage may be disabled */}};
+const isCaregiver=(token:string)=>token.endsWith(':caregiver');
 function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
  const [token,setToken]=useState('');
  const [persona,setPersona]=useState<'patient'|'caregiver'>('patient');
@@ -67,7 +70,7 @@ function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
 }
 export default function App(){
   const {pathname}=useLocation();
-  const [token,setToken]=useState(()=>{try{return sessionStorage.getItem(sessionKey)||''}catch{return ''}});
+  const [token,setToken]=useState(readSession);
   const [patient,setPatient]=useState<Patient|null>(null);const [checking,setChecking]=useState(Boolean(token));
   useEffect(()=>{
     let active=true;
@@ -75,24 +78,25 @@ export default function App(){
     setChecking(true);
     patientsApi(createClient(token)).me()
       .then(p=>{if(active)setPatient(p)})
-      .catch(()=>{if(active){setPatient(null);setToken('');try{sessionStorage.removeItem(sessionKey)}catch{/* optional */}}})
+      .catch(()=>{if(active){setPatient(null);setToken('');saveSession('')}})
       .finally(()=>{if(active)setChecking(false)});
     return()=>{active=false};
   },[token]);
   function login(nextToken:string,nextPatient:Patient){
-    try{sessionStorage.setItem(sessionKey,nextToken)}catch{/* optional */}
+    saveSession(nextToken)
     setPatient(nextPatient);setToken(nextToken);
   }
   function signOut(){
     try{sessionStorage.removeItem(sessionKey)}catch{/* optional */}
     setPatient(null);setToken('');
   }
+  const caregiver=isCaregiver(token);
   if(checking)return <div className="startup"><HeartPulse size={36}/><p>Opening your recovery space…</p></div>;
   if(!token||!patient)return pathname==='/features'?<FeaturesPage guest/>:<DemoLogin onLogin={login}/>;
-  return <SessionProvider token={token} initialPatient={patient} role={token.endsWith(":caregiver")?"caregiver":"patient"} signOut={signOut}>
-    <OperationProvider key={patient.id} patientId={patient.id} enabled={!token.endsWith(':caregiver')}>
+  return <SessionProvider key={`${patient.id}:${token}`} token={token} initialPatient={patient} role={caregiver?"caregiver":"patient"} signOut={signOut}>
+    <OperationProvider key={patient.id} patientId={patient.id} enabled={!caregiver}>
     <Routes><Route element={<Shell/>}>
-      <Route path="/" element={token.endsWith(":caregiver")?<Navigate to="/caregivers" replace/>:<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<Dashboard/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
+      <Route path="/" element={caregiver?<Navigate to="/caregivers" replace/>:<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<Dashboard/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
       <Route path="/appointments" element={<UnavailablePage title="Appointments" reason="Appointments are not connected to a backend service yet."/>}/>
       <Route path="/messages" element={<UnavailablePage title="Care team messages" reason="Secure care team messaging is not connected yet. Use your discharge paperwork to contact your clinical team."/>}/>
       <Route path="*" element={<Navigate to="/" replace/>}/>
