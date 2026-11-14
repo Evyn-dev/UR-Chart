@@ -12,6 +12,19 @@ from app.models import Patient
 bearer = HTTPBearer(auto_error=False)
 
 
+def one_click_demo_available(settings):
+    """Public access to fictional identities only, with explicit server opt-in."""
+    return (
+        settings.one_click_demo_enabled
+        and not settings.supabase_url
+        and (
+            (settings.demo_auth_enabled and
+             "synthetic-demo-patient" in settings.demo_tokens.values())
+            or bool(settings.hosted_demo_code_hash)
+        )
+    )
+
+
 def get_db(request: Request):
     with request.app.state.sessions() as session:
         yield session
