@@ -69,9 +69,9 @@ try {
   & $pythonExe -m alembic upgrade head
   Assert-LastCommand 'Database migration'
   # Seed is idempotent and runs only in demo-auth development mode.
-  $settingsOutput = & $pythonExe -c 'from app.config import Settings; print("enabled" if Settings().demo_auth_enabled and Settings().app_env != "production" else "disabled")'
+  $settingsOutput = & $pythonExe -c 'from app.config import Settings; print(int(Settings().demo_auth_enabled))'
   Assert-LastCommand 'Backend settings check'
-  if (($settingsOutput | Select-Object -Last 1) -eq 'enabled') {
+  if (($settingsOutput | Select-Object -Last 1) -eq '1') {
     & $pythonExe -m app.seed
     Assert-LastCommand 'Synthetic demo data setup'
   } else {
