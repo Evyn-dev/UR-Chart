@@ -1,162 +1,85 @@
 /* Monitor-inspired visuals adapted from uploaded ur-chart-monitor-ui.zip.
    All monitor lines and numbers are illustrative, never patient vitals. */
-:root{--mon-green:#39FF9A;--mon-cyan:#4FD8FF;--mon-bg:#04110D;--mon-text:#E8FFF4;--mon-muted:#B7D6C8}
+:root{--mon-teal:#168A98;--mon-cyan:#2168A5;--mon-bg:#F5F8FC;--mon-text:#17304A;--mon-muted:#526C80}
 @keyframes mon-trace{from{stroke-dashoffset:1000}to{stroke-dashoffset:0}}
 @keyframes mon-rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 @keyframes mon-beat{0%,40%,100%{transform:scale(1)}10%{transform:scale(1.22)}30%{transform:scale(1.12)}}
 @keyframes mon-drift{from{background-position:0 0,0 0,0 0,0 0}to{background-position:-120px 0,0 0,-120px 0,0 0}}
 @keyframes mon-blink{50%{opacity:.25}}
 .monitor-bg{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.monitor-grid{position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(57,255,154,.07) 1px,transparent 1px),linear-gradient(rgba(57,255,154,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(57,255,154,.14) 1px,transparent 1px),linear-gradient(rgba(57,255,154,.14) 1px,transparent 1px);background-size:24px 24px,24px 24px,120px 120px,120px 120px;animation:mon-drift 6s linear infinite}
+.monitor-grid{position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(22,138,152,.07) 1px,transparent 1px),linear-gradient(rgba(22,138,152,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(22,138,152,.14) 1px,transparent 1px),linear-gradient(rgba(22,138,152,.14) 1px,transparent 1px);background-size:24px 24px,24px 24px,120px 120px,120px 120px;animation:mon-drift 6s linear infinite}
 .monitor-scan{position:absolute;inset:0;background:repeating-linear-gradient(rgba(0,0,0,.2) 0 1px,transparent 1px 3px),radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.7) 100%)}
 .ecg{position:absolute;inset:0;pointer-events:none}
-.ecg-main{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 0 6px var(--mon-green))}
-.ecg-main path{stroke:var(--mon-green)}
+.ecg-main{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 0 6px var(--mon-teal))}
+.ecg-main path{stroke:var(--mon-teal)}
 .ecg-pleth{position:absolute;left:0;right:0;bottom:0;width:100%;height:90px;filter:drop-shadow(0 0 5px var(--mon-cyan))}
 .ecg-pleth path{stroke:var(--mon-cyan)}
 .ecg-ghost{stroke-width:3;opacity:.18}
 .ecg-sweep{stroke-width:4;stroke-dasharray:240 760;animation:mon-trace 4.2s linear infinite}
 .ecg-sweep2{stroke-width:3;stroke-dasharray:300 700;animation:mon-trace 7s linear infinite}
 /* Uploaded sign-in design */
-.mon-screen{position:relative;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#0A241B 0%,var(--mon-bg) 70%);color:var(--mon-text);font-family:'Space Grotesk',Inter,ui-sans-serif,system-ui,sans-serif}
+.mon-screen{position:relative;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#E9F5FA 0%,var(--mon-bg) 70%);color:var(--mon-text);font-family:'Space Grotesk',Inter,ui-sans-serif,system-ui,sans-serif}
 .mon-screen>*:not(.monitor-bg){position:relative;z-index:2}
-.mon-screen button:focus-visible,.mon-screen a:focus-visible,.mon-screen input:focus-visible,.mon-screen select:focus-visible{outline-color:var(--mon-green)}
+.mon-screen button:focus-visible,.mon-screen a:focus-visible,.mon-screen input:focus-visible,.mon-screen select:focus-visible{outline-color:var(--mon-teal)}
 .mon-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px clamp(20px,4vw,48px)}
-.mon-brand{display:flex;align-items:center;gap:10px;font-size:23px;letter-spacing:-.04em;color:var(--mon-green)}
-.mon-brand strong{color:var(--mon-text)}.mon-brand strong span{color:var(--mon-green)}
+.mon-brand{display:flex;align-items:center;gap:10px;font-size:23px;letter-spacing:-.04em;color:var(--mon-teal)}
+.mon-brand strong{color:var(--mon-text)}.mon-brand strong span{color:var(--mon-teal)}
 .mon-link{display:inline-flex;align-items:center;gap:6px;min-height:44px;color:var(--mon-muted);font-size:14px;font-weight:600}
 .mon-link:hover{color:#fff;text-decoration:underline}
 .mon-main{display:flex;flex-wrap:wrap;align-items:center;gap:32px 48px;width:100%;max-width:1200px;margin:0 auto;padding:clamp(16px,4vh,48px) clamp(20px,4vw,48px) 0}
 .mon-hero{flex:1 1 480px;min-width:0}
-.mon-eyebrow{display:inline-flex;align-items:center;gap:10px;font:500 13px 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;color:#8FB8A6;animation:mon-rise .8s .1s both}
-.mon-dot{width:10px;height:10px;border-radius:50%;background:var(--mon-green);animation:mon-blink 1.2s infinite}
+.mon-eyebrow{display:inline-flex;align-items:center;gap:10px;font:500 13px 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;color:#226779;animation:mon-rise .8s .1s both}
+.mon-dot{width:10px;height:10px;border-radius:50%;background:var(--mon-teal);animation:mon-blink 1.2s infinite}
 .mon-hero h1{margin:16px 0;font-size:clamp(44px,6.5vw,80px);line-height:1;font-weight:700;letter-spacing:-.02em;animation:mon-rise .8s .3s both}
-.mon-hero h1 em{font-style:normal;color:var(--mon-green);text-shadow:0 0 28px #39ff9a66}
+.mon-hero h1 em{font-style:normal;color:var(--mon-teal);text-shadow:0 0 28px #168A9866}
 .mon-hero p{max-width:520px;margin:0 0 24px;font-size:18px;line-height:1.55;color:var(--mon-muted);animation:mon-rise .8s .5s both}
 .mon-features{display:flex;flex-wrap:wrap;gap:12px 20px;animation:mon-rise .8s .7s both}
 .mon-features span{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--mon-text)}
-.mon-features svg{color:var(--mon-green)}
-.mon-card{flex:0 1 420px;width:100%;padding:28px;border:1px solid rgba(57,255,154,.3);border-radius:18px;background:rgba(4,17,13,.82);backdrop-filter:blur(6px);animation:mon-rise .8s .4s both}
+.mon-features svg{color:var(--mon-teal)}
+.mon-card{flex:0 1 420px;width:100%;padding:28px;border:1px solid rgba(22,138,152,.3);border-radius:18px;background:rgba(255,255,255,.82);backdrop-filter:blur(6px);animation:mon-rise .8s .4s both}
 .mon-card label{color:var(--mon-muted)}
-.mon-card input,.mon-card select{background:rgba(255,255,255,.06);border:1px solid rgba(57,255,154,.3);color:var(--mon-text)}
-.mon-card input::placeholder{color:#7FA595}
-.mon-card option{background:#0A241B;color:var(--mon-text)}
-.mon-card .field-with-icon svg{color:#8FB8A6}
-.mon-card .btn.primary{background:var(--mon-green);color:var(--mon-bg);border:0;border-radius:26px;min-height:50px;font-size:14px}
-.mon-card .entry-foot{font-size:11px!important;line-height:1.5;color:#9CC4B3}
+.mon-card input,.mon-card select{background:rgba(255,255,255,.06);border:1px solid rgba(22,138,152,.3);color:var(--mon-text)}
+.mon-card input::placeholder{color:#657C8C}
+.mon-card option{background:#E9F5FA;color:var(--mon-text)}
+.mon-card .field-with-icon svg{color:#226779}
+.mon-card .btn.primary{background:var(--mon-teal);color:var(--mon-bg);border:0;border-radius:26px;min-height:50px;font-size:14px}
+.mon-card .entry-foot{font-size:11px!important;line-height:1.5;color:#526C80}
 .mon-trace{position:relative;flex:1;min-height:240px}
 .mon-readout{position:absolute;top:8px;right:clamp(20px,4vw,48px);z-index:2;text-align:center}
-.mon-readout svg{color:var(--mon-green);filter:drop-shadow(0 0 10px var(--mon-green));animation:mon-beat .83s ease-in-out infinite}
-.mon-readout b{display:block;font:700 72px/1 'JetBrains Mono',ui-monospace,monospace;color:var(--mon-green);text-shadow:0 0 30px #39ff9a88}
-.mon-readout span{font:500 11px 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.16em;color:#8FB8A6}
+.mon-readout svg{color:var(--mon-teal);filter:drop-shadow(0 0 10px var(--mon-teal));animation:mon-beat .83s ease-in-out infinite}
+.mon-readout b{display:block;font:700 72px/1 'JetBrains Mono',ui-monospace,monospace;color:var(--mon-teal);text-shadow:0 0 30px #168A9888}
+.mon-readout span{font:500 11px 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.16em;color:#226779}
 .mon-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;width:100%;max-width:1200px;margin:0 auto;padding:0 clamp(20px,4vw,48px) 36px}
-.mon-steps div{padding:16px 18px;border:1px solid rgba(57,255,154,.25);border-radius:14px;background:rgba(4,17,13,.8)}
-.mon-steps b{display:block;font:500 12px 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;color:var(--mon-green)}
+.mon-steps div{padding:16px 18px;border:1px solid rgba(22,138,152,.25);border-radius:14px;background:rgba(255,255,255,.8)}
+.mon-steps b{display:block;font:500 12px 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;color:var(--mon-teal)}
 .mon-steps span{font-size:16px;font-weight:700}
 /* The existing dashboard retains live cards/charts/links. Only its hero is reskinned. */
-.welcome-band{position:relative;overflow:hidden;background:radial-gradient(ellipse at 70% 40%,#0A241B 0%,var(--mon-bg) 75%)}
+.welcome-band{position:relative;overflow:hidden;background:radial-gradient(ellipse at 70% 40%,#E9F5FA 0%,var(--mon-bg) 75%)}
 .welcome-band>div:not(.monitor-bg):not(.ecg){position:relative;z-index:2}
 .welcome-band .ecg{inset:auto 0 0 0;height:62%;opacity:.55}
-.welcome-band .btn.primary{background:var(--mon-green);color:var(--mon-bg)}
-.welcome-band .hello-dot{color:var(--mon-green)}
-.welcome-band .welcome-art{color:var(--mon-green)}
-.welcome-band .heart-orbit{border-color:rgba(57,255,154,.4);background:radial-gradient(circle,rgba(57,255,154,.16),transparent 70%)}
-.welcome-band .heart-orbit svg{filter:drop-shadow(0 0 10px var(--mon-green));animation:mon-beat .83s ease-in-out infinite}
-.startup{background:var(--mon-bg);color:var(--mon-green)}
+.welcome-band .btn.primary{background:var(--mon-teal);color:var(--mon-bg)}
+.welcome-band .hello-dot{color:var(--mon-teal)}
+.welcome-band .welcome-art{color:var(--mon-teal)}
+.welcome-band .heart-orbit{border-color:rgba(22,138,152,.4);background:radial-gradient(circle,rgba(22,138,152,.16),transparent 70%)}
+.welcome-band .heart-orbit svg{filter:drop-shadow(0 0 10px var(--mon-teal));animation:mon-beat .83s ease-in-out infinite}
+.startup{background:var(--mon-bg);color:var(--mon-teal)}
 .startup p{color:var(--mon-muted)}
-.startup svg{justify-self:center;filter:drop-shadow(0 0 10px var(--mon-green));animation:mon-beat .83s ease-in-out infinite}
-/* Extend uploaded monitor palette across existing authenticated navigation and modules. */
-.app-shell{background:#071611;color:#e7f7ed;font-family:'Space Grotesk',Inter,system-ui,sans-serif}
-.app-shell .workspace{background:radial-gradient(ellipse at 50% 5%,#0b261c,#06130f 75%);min-width:0}
-.app-shell .sidebar{background:#081a14;border-right:1px solid #25513a}
-.app-shell .topbar{background:#0a1d16;border-bottom:1px solid #234631}
-.app-shell .sidebar-logo strong,.app-shell .sidebar-person b,.app-shell .breadcrumb strong{color:#e8fff4}
-.app-shell .sidebar-logo strong span,.app-shell .logo-dot,.app-shell .nav-link.active,.app-shell .brand-mark{color:#39ff9a}
-.app-shell .brand-mark{background:#123e2b}
-.app-shell .sidebar-caption,.app-shell .breadcrumb,.app-shell .nav-link{color:#a4c5b5}
-.app-shell .nav-link:hover,.app-shell .nav-link.active{background:#133a29;color:#39ff9a}
-.app-shell .main-content{color:#e8fff4}
-.app-shell .page-intro h1,.app-shell .page-intro p,.app-shell .page-intro .eyebrow{color:#e8fff4}
-.app-shell .page-intro .eyebrow,.app-shell .section-heading{color:#39ff9a}
-.app-shell .panel,.app-shell .stat-card,.app-shell .feature-tile,.app-shell .content-card{background:#0d221a;color:#e8fff4;border-color:#244f39}
-.app-shell .panel h2,.app-shell .panel h3,.app-shell .stat-card b,.app-shell .stat-card strong,.app-shell .content-card h3{color:#edfff5}
-.app-shell .muted,.app-shell .panel p,.app-shell .stat-card p,.app-shell .site-footer{color:#afcdbb}
-.app-shell .site-footer{background:#071611;border-top:1px solid #244f39}
-.app-shell .btn.primary{background:#39e58e;color:#06150e;border-color:#39e58e}
-.app-shell input,.app-shell textarea,.app-shell select{background:#102b20;color:#eafff3;border-color:#356047}
-.app-shell input::placeholder,.app-shell textarea::placeholder{color:#8aac9a}
-.app-shell label,.app-shell .top-profile,.app-shell .topbar-emergency{color:#c2dfcc}
-.app-shell .topbar-emergency{background:#182c24;border-color:#4c7761}
-.app-shell .sidebar-support{background:#123525;border-color:#275b40;color:#dbffe9}
-.app-shell .avatar{background:#184a34;color:#65f1a0}
-.app-shell .notice,.app-shell .feature-important{background:#132a21;border-color:#38654b;color:#d0efdd}
-.app-shell .time-chip,.app-shell .dose-row,.app-shell .shortcut-list a{color:#d9f6e7;border-color:#2c4d3c}
-.app-shell .shortcut-list a:hover{background:#123a29}
-.app-shell .empty-state,.app-shell .chart-wrap{color:#cae7d6}
-.app-shell .status-tag.enabled,.app-shell .demo-flag{color:#50ef9c}
-.app-shell .card-grid .stat,.app-shell .card-grid .stat-card{border-color:#244f39}
-.app-shell .sidebar-person,.app-shell .profile-popover{border-color:#28503b}
-.app-shell .profile-popover{background:#113225;color:#ddffe9}
-/* Clara keeps its full conversation features, now matching the monitor style. */
-.clara-window{background:#091b14;color:#eafff2;border-color:#376e4a}
-.clara-header{background:linear-gradient(110deg,#123f2b,#0c261c)}
-.clara-mark,.clara-welcome-icon{background:#174b33;color:#40ef94}
-.clara-launcher{background:#0f633b;color:#ebfff3;box-shadow:0 12px 32px #06170da9;border-color:#63e59e}
-.clara-launcher:hover{background:#18804a}
-.clara-toolbar,.clara-compose{border-color:#285239}
-.clara-toolbar button,.clara-welcome button{background:#123827;color:#b4f2cb;border-color:#326849}
-.clara-toolbar button.clara-safety-link{background:#441e21;color:#ffb5b9;border-color:#794045}
-.clara-chat-scroll{background:#091b14}
-.clara-reply{background:#143427;color:#e5fff1}
-.clara-user{background:#227347;color:#fff}
-.clara-welcome h3{color:#eafff2}
-.clara-welcome p,.clara-voice-info,.clara-footer{color:#b6d5c3}
-.clara-mic{background:#194530;color:#51e795}
-.clara-send{background:#30c978;color:#06190e}
-.clara-compose input{background:#0e2a1c;color:#eafff2;border-color:#36704c}
+.startup svg{justify-self:center;filter:drop-shadow(0 0 10px var(--mon-teal));animation:mon-beat .83s ease-in-out infinite}
+
 @media(max-width:900px){.mon-readout{display:none}.mon-trace{min-height:180px}}
 @media(max-width:560px){.mon-steps{grid-template-columns:1fr}.mon-card{padding:22px}}
 @media(prefers-reduced-motion:reduce){.monitor-grid,.ecg-sweep,.ecg-sweep2,.mon-screen *,.welcome-band .heart-orbit svg,.startup svg{animation:none!important}}
 
-/* Contrast fixes for data-heavy existing modules and guest feature directory. */
-.app-shell .stat-card,.app-shell .panel{background:#0d221a;border-color:#25513b;box-shadow:0 4px 18px #00110966}
-.app-shell .stat-value,.app-shell .stat-card-head,.app-shell .panel-title,.app-shell .dose-name strong{color:#eafff2}
-.app-shell .stat-card-head,.app-shell .dose-name span,.app-shell .time-chip{color:#b9ddca}
-.app-shell .stat-icon{background:#15472f;color:#41eb94}
-.app-shell .profile-popover a,.app-shell .profile-popover button{background:#113225;color:#d8f9e5}
-.app-shell .profile-popover a:hover,.app-shell .profile-popover button:hover{background:#22533a}
-.app-shell .feedback.error{background:#43242b;border-color:#82434b;color:#ffc9ce}
-.app-shell .feedback.success{background:#143c2b;border-color:#32754c;color:#c2ffd8}
-.app-shell .time-chip,.app-shell .dose-name strong,.app-shell .dose-name span{color:#d2f4e0}
-.app-shell .chart-wrap .recharts-cartesian-axis-tick-value{fill:#c5dbcb}
-.app-shell .clara-window .clara-toolbar button,.app-shell .clara-window .clara-welcome button{color:#d9fbe6}
-.app-shell .clara-window .clara-heading strong{color:#f1fff6}
-.app-shell .clara-window .clara-history{background:#102c20;border-color:#285239}
-.app-shell .clara-window .clara-history button{color:#d8f5e2}
-.app-shell .clara-window .clara-history button:hover{background:#1d4833}
-.app-shell .clara-window .clara-voice-info{color:#c4decf}
-.app-shell .clara-window .clara-welcome p{color:#bce2cb}
-.feature-hub-guest{background:radial-gradient(ellipse at top,#0c2d20,#04110d);color:#e8fff4}
-.feature-hub-guest .feature-heading h1,.feature-hub-guest .feature-brand{color:#e8fff4}
-.feature-hub-guest .feature-heading h1 span,.feature-hub-guest .feature-tile-icon{color:#39ff9a}
-.feature-hub-guest .feature-heading p,.feature-hub-guest .feature-tile p{color:#b5d5c3}
-.feature-hub-guest .feature-tile{background:#10291e;border:1px solid #245b3e;color:#eafff3}
-.feature-hub-guest .feature-tile h3{color:#eafff3}
-.feature-hub-guest .feature-tile-icon{background:#164632}
-.feature-hub-guest .feature-important,.feature-hub-guest .feature-start{background:#123223;border-color:#326747;color:#d2f3de}
-.feature-hub-guest .feature-important strong,.feature-hub-guest .feature-start strong{color:#edfff4}
 
-/* Read-only caregiver monitoring cards */
-.caregiver-summary{display:grid;gap:13px;margin-top:16px;padding:15px;background:#112e20;border:1px solid #2d6c48;border-radius:15px;color:#e8fff2}
-.caregiver-summary h3{margin:0;font-size:17px;color:#eafff4}
-.caregiver-summary-section{padding:14px;background:#0c2218;border:1px solid #28563b;border-radius:12px}
-.caregiver-summary-section>strong{display:block;margin-bottom:9px;color:#4aefa0;font-size:13px}
+/* Caregiver summary layout; palette is defined once in the clinical design section. */
+.caregiver-summary{display:grid;gap:13px;margin-top:16px;padding:15px;border:1px solid;border-radius:15px}
+.caregiver-summary h3{margin:0;font-size:17px}
+.caregiver-summary-section{padding:14px;border:1px solid;border-radius:12px}
+.caregiver-summary-section>strong{display:block;margin-bottom:9px;font-size:13px}
 .caregiver-summary-section dl{display:grid;gap:8px;margin:0}
-.caregiver-summary-section dl div{display:flex;justify-content:space-between;gap:15px;font-size:12px;border-bottom:1px solid #254d37;padding-bottom:5px}
-.caregiver-summary-section dt{color:#b5d4c1;text-transform:capitalize}
-.caregiver-summary-section dd{margin:0;text-align:right;color:#ecfff4}
-.caregiver-summary-section p{color:#c2e1cd}
-
+.caregiver-summary-section dl div{display:flex;justify-content:space-between;gap:15px;font-size:12px;border-bottom:1px solid;padding-bottom:5px}
+.caregiver-summary-section dt{text-transform:capitalize}
+.caregiver-summary-section dd{margin:0;text-align:right}
 
 /* Compact mobile landing screen: no forced desktop-sized hero or wasted scroll. */
 @media (max-width: 820px) {
@@ -198,11 +121,12 @@
   .mon-steps { padding-inline: 12px; }
 }
 
+
 /* ===== Clinical White + Ocean Blue design system =====
-   Visual overrides only: existing auth, data flows, routing and Clara are unchanged.
+   Authoritative palette for sign-in, dashboard, caregiver views, navigation, and Clara.
    Dark ink on pale surfaces, accessible blue buttons, and muted cyan ECG detail. */
 :root{
- --mon-green:#168A98;--mon-cyan:#2168A5;--mon-bg:#F5F8FC;
+ --mon-teal:#168A98;--mon-cyan:#2168A5;--mon-bg:#F5F8FC;
  --mon-text:#17304A;--mon-muted:#526C80;
  --clinical-bg:#F5F8FC;--clinical-card:#FFFFFF;--clinical-ink:#17304A;
  --clinical-subtle:#526C80;--clinical-border:#DCE8EF;
