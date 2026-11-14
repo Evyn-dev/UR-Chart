@@ -1,0 +1,35 @@
+name: Hosted UR Chart API smoke check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check hosted API and rejected unauthenticated patient access
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://ur-chart-api.vercel.app"
+          for attempt in $(seq 1 8); do
+            status=$(curl --max-time 20 --silent --show-error --output /tmp/health.json --write-out "%{http_code}" "$url/api/health" || true)
+            echo "Health attempt $attempt: HTTP $status"
+            if [ "$status" = "200" ]; then break; fi
+            sleep 6
+          done
+          python - <<'PY'
+          import json
+          with open("/tmp/health.json", encoding="utf-8") as stream:
+              response=json.load(stream)
+          data=response.get("data",{})
+          assert data.get("status")=="ok", f"Unexpected health status: {data.get('status')!r}"
+          assert data.get("authentication")=="supabase", f"Unexpected authentication configuration: {data.get('authentication')!r}"
+          print("Hosted API health confirmed with Supabase Auth")
+          PY
+          code=$(curl --max-time 20 --silent --show-error --output /tmp/unauth.json --write-out "%{http_code}" "$url/api/patients/me" || true)
+          echo "Unauthenticated patient request: HTTP $code"
+          test "$code" = "401"
