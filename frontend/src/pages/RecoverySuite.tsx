@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {Link,useSearchParams} from 'react-router-dom';
 import {AlertTriangle,CalendarDays,Check,ClipboardList,MapPin,MessageCircle,PhoneCall,Pill,ShieldAlert,Printer} from 'lucide-react';
 import {useSession} from '../hooks/session';
@@ -30,6 +30,7 @@ function Banner({text,error=false}:{text:string;error?:boolean}){return <div rol
 
 export function EmergencyConnect(){
  const {api,role}=useSession();const [searchParams,setSearchParams]=useSearchParams();
+ const wakeHandled=useRef(false);
  const {value:contacts,refresh:refreshContacts}=useFetch<Contact[]>(role==='patient'?'/engagement/contacts':null);
  const {value:history,refresh:refreshHistory}=useFetch<Event[]>(role==='patient'?'/engagement/emergencies':'/engagement/caregiver/emergencies');
  const {value:prep}=useFetch<Prep>(role==='patient'?'/engagement/visit-prep':null);
@@ -43,9 +44,20 @@ export function EmergencyConnect(){
     'Notification provider accepted a request. Delivery and caregiver response are not guaranteed.':'Emergency mode activated. No real caregiver message or phone call was sent in demo mode.');}
   catch(e){setError(errorMsg(e))}finally{setSending(false)}
  };
- useEffect(()=>{if(role==='patient'&&searchParams.get('activate')==='1'){
-  setSearchParams({}, {replace:true});void activate();
+ useEffect(()=>{if(role==='patient'&&searchParams.get('activate')==='1'&&!wakeHandled.current){
+  wakeHandled.current=true;setSearchParams({}, {replace:true});void activate();
  }},[role,searchParams,setSearchParams]);
+ useEffect(()=>{const id=window.setInterval(refreshHistory,15000);return()=>window.clearInterval(id)},[api,role]);
+ useEffect(()=>{
+  if(role!=='patient'||!history?.length)return;
+  const pending=history.find(event=>!event.acknowledged_at&&!event.notifications.some(a=>a.priority===2));
+  if(!pending)return;
+  const ms=Math.max(1000,new Date(pending.created_at).getTime()+120000-Date.now());
+  const timer=window.setTimeout(()=>{
+   api('/engagement/emergencies/'+pending.id+'/escalate','POST',{}).then(()=>refreshHistory()).catch(()=>{/* the patient can retry manually */});
+  },ms);
+  return()=>window.clearTimeout(timer);
+ },[api,role,history]);
  const shareLocation=()=>{
   if(!navigator.geolocation){setError('Location access is not available.');return}
   navigator.geolocation.getCurrentPosition(position=>{
