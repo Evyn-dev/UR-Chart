@@ -10,6 +10,7 @@ class AIUnavailable(Exception):
 @dataclass(frozen=True)
 class PatientContext:
     approved_instructions: tuple[str, ...]
+    patient_snapshot: str = ""
 
 
 class AIProvider(Protocol):
@@ -30,6 +31,9 @@ class ApprovedInstructionsProvider:
 
 
 def build_provider(settings) -> AIProvider:
+    if settings.ai_provider == "openai":
+        from app.services.openai_recovery import OpenAIRecoveryProvider
+        return OpenAIRecoveryProvider(settings.ai_api_key, settings.ai_model)
     if settings.ai_provider == "approved_instructions":
         return ApprovedInstructionsProvider()
     return DisabledProvider()

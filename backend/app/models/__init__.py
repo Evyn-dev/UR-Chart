@@ -146,3 +146,6 @@ class RiskEvaluation(Record, Base):
 
 
 from app.models.support import RecoveryAudit, CaregiverRelationship, CaregiverAudit
+
+# Imported after shared models to avoid circular imports.
+from app.models.reminders import PersonalReminder

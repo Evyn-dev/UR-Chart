@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UR Chart | Voice Recovery Assistant</title>
+<style>
+:root { color-scheme:dark; font:16px/1.45 system-ui,sans-serif; background:#0d1b31;color:#f3f7ff }
+*{box-sizing:border-box}body{max-width:880px;margin:auto;padding:20px}
+header{display:flex;align-items:center;justify-content:space-between;gap:14px}h1{margin:0;font-size:2rem}h2{margin:0 0 14px;font-size:1.35rem}
+.panel{background:#192b47;border:1px solid #304e74;border-radius:16px;padding:20px;margin:18px 0}
+input,textarea,select,button{font:inherit;padding:10px 12px;border-radius:9px;border:1px solid #507096}
+input,textarea,select{color:#fff;background:#0e2038;width:100%}button{background:#3685ec;color:#fff;border:none;cursor:pointer}
+button.secondary{background:#435572}button.danger{background:#c63448}button:disabled{opacity:.5}
+.flex{display:flex;gap:10px;flex-wrap:wrap}.flex>*{flex:1}label{display:block;margin:7px 0}
+small,.muted{color:#b0c2da}#chat{height:230px;overflow:auto;border:1px solid #304e74;border-radius:9px;padding:10px;background:#101f36;margin-bottom:14px}
+.msg{padding:8px 2px;border-bottom:1px solid #253e60}#reminders>article{border:1px solid #344d6e;border-radius:10px;padding:12px;margin-top:8px}
+#emergency{background:#51232e;border:2px solid #fb7580}#emergency[hidden]{display:none}
+#status{margin:6px 0}a{color:#a6d3ff}
+</style>
+</head>
+<body>
+<header><div><h1>♡ UR Chart</h1><div class="muted">Urgent Recovery · Your Voice</div></div><strong>Assistant Module</strong></header>
+<section class="panel"><h2>Connect to the shared backend</h2>
+<label>Backend URL<input id="base" value="http://localhost:8000" autocomplete="off"></label>
+<label>Demo bearer token (kept only in this tab)<input id="token" type="password" autocomplete="off" placeholder="Enter your assigned synthetic demo token"></label>
+<button id="connect">Connect</button><p id="status" aria-live="polite" class="muted">Not connected</p></section>
+<section class="panel"><h2>Chart Chart — Voice Assistant</h2>
+<p>Use “Chart Chart” to wake the assistant, then ask a question. Say “Chart Emergency” to activate the emergency panel.</p>
+<p><button id="listen">Enable voice</button> <span id="voice" class="muted">Microphone inactive</span></p>
+<div id="chat" aria-live="polite"></div>
+<form id="ask" class="flex"><input id="question" placeholder="Ask about your recovery…" required><button>Send</button></form>
+<small>Demo only: browser wake-word listening stops when the tab or device is inactive. Medical safety screening is not reliable diagnosis or monitoring.</small></section>
+<section id="emergency" class="panel" hidden><h2>🚨 Chart Emergency</h2>
+<p>If you have a real medical emergency, call emergency services now. In the United States, the number is <strong>911</strong>.</p>
+<p id="location">Location not requested. Your browser does not send this location to emergency services.</p>
+<button id="locate">Display my location</button><button id="closeEmergency" class="secondary">Close demo</button>
+<p><small>Demo mode never automatically dials 911. Call using your own device when there is an actual emergency.</small></p></section>
+<section class="panel"><h2>Custom Reminders</h2>
+<p class="muted">Create reminders for anything. Repeat daily, weekly, monthly, or on weekdays.</p>
+<form id="createReminder">
+<label>Title<input id="title" required maxlength="120" placeholder="Take a walk"></label>
+<label>Notes<textarea id="notes" maxlength="500" rows="2"></textarea></label>
+<div class="flex"><label>When<input id="when" type="datetime-local" required></label>
+<label>Repeat<select id="repeat"><option value="once">Once</option><option value="daily">Daily</option><option value="weekdays">Weekdays</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></label></div>
+<button>Add reminder</button><button type="button" class="secondary" id="notifications">Enable browser notifications</button>
+</form><p id="reminderStatus" class="muted" aria-live="polite"></p><div id="reminders"></div>
+<small>Browser notifications require permission and only work while this page and backend remain running. This is not a background reminder service.</small></section>
+<script>
+const $=id=>document.getElementById(id);
+let connected=false, reminders=[], recognition, voiceEnabled=false, awaitingSpeech=false, emergencyActive=false, conversationId=null;
+const spoken=new Set();
+function append(who,value){const d=document.createElement('div');d.className='msg';d.textContent=who+': '+value;$('chat').append(d);$('chat').scrollTop=$('chat').scrollHeight}
+function speak(value){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(value);u.rate=.94;speechSynthesis.speak(u)}catch(_){}}
+async function api(path,{method='GET',body}={}){const base=$('base').value.replace(/\/$/,'');const token=$('token').value.trim();if(!token)throw Error('Enter a demo token first');const r=await fetch(base+'/api'+path,{method,headers:{Authorization:'Bearer '+token,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});const v=await r.json();if(!r.ok)throw Error(v.error?.message||'Request failed');return v.data}
+$('connect').onclick=async()=>{try{const user=await api('/patients/me');connected=true;$('status').textContent='Connected as '+user.display_name;load()}catch(e){connected=false;$('status').textContent=e.message}};
+function emergency(){emergencyActive=true;$('emergency').hidden=false;$('emergency').scrollIntoView({behavior:'smooth'});speak('Chart emergency activated. If this is a real emergency, call local emergency services now. In the United States call 911.')}
+$('closeEmergency').onclick=()=>{emergencyActive=false;$('emergency').hidden=true};
+$('locate').onclick=()=>{if(!navigator.geolocation){$('location').textContent='Location not available';return}navigator.geolocation.getCurrentPosition(p=>{$('location').textContent='Coordinates: '+p.coords.latitude.toFixed(5)+', '+p.coords.longitude.toFixed(5)+'. Tell dispatcher your location manually.'},()=>{$('location').textContent='Location permission denied or unavailable.'},{enableHighAccuracy:true,timeout:8000})};
+async function question(message){append('You',message);try{const signal=await api('/assistant/triage',{method:'POST',body:{message}});if(signal.emergency_mode){append('Safety',signal.guidance);emergency();return}if(signal.category==='clinical_followup'){append('Safety',signal.guidance);speak(signal.guidance);return}const result=await api('/chat/message',{method:'POST',body:{message,...(conversationId?{conversation_id:conversationId}:{})}});conversationId=result.conversation_id;const reply=result.assistant_message.content;append('Chart',reply);speak(reply)}catch(e){append('System',e.message)}}
+$('ask').onsubmit=e=>{e.preventDefault();const q=$('question').value.trim();if(q){$('question').value='';question(q)}};
+const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+$('listen').onclick=()=>{if(!Recognition){$('voice').textContent='Speech recognition unavailable. Use text.';return}
+if(voiceEnabled){voiceEnabled=false;recognition?.stop();$('voice').textContent='Voice stopped';$('listen').textContent='Enable voice';return}
+recognition=new Recognition();recognition.continuous=true;recognition.interimResults=false;recognition.lang='en-US';voiceEnabled=true;
+recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){const phrase=e.results[i][0].transcript.trim();const lower=phrase.toLowerCase();
+if(lower.includes('chart emergency')){awaitingSpeech=false;emergency();return}
+if(lower.includes('chart chart')){awaitingSpeech=true;$('voice').textContent='Chart awake — speak your request';speak('How can I help?');const tail=phrase.slice(lower.indexOf('chart chart')+11).trim();if(tail){awaitingSpeech=false;question(tail)}return}
+if(awaitingSpeech){awaitingSpeech=false;question(phrase)}
+}};
+recognition.onerror=e=>{$('voice').textContent='Microphone: '+e.error};
+recognition.onend=()=>{if(voiceEnabled){try{recognition.start()}catch(e){voiceEnabled=false;$('voice').textContent='Microphone stopped; re-enable manually.';$('listen').textContent='Enable voice'}}};
+try{recognition.start();$('listen').textContent='Stop voice';$('voice').textContent='Listening for Chart Chart / Chart Emergency'}catch(e){voiceEnabled=false;$('voice').textContent='Microphone could not start'}};
+$('notifications').onclick=async()=>{if(!('Notification'in window)){$('reminderStatus').textContent='Browser notifications unsupported';return}$('reminderStatus').textContent='Notification permission: '+await Notification.requestPermission()};
+function notify(item){if(!item.active||new Date(item.due_at).getTime()>Date.now())return;const key=item.id+'/'+item.due_at;if(spoken.has(key))return;spoken.add(key);$('reminderStatus').textContent='🔔 Due: '+item.title;if('Notification'in window&&Notification.permission==='granted')new Notification('UR Chart reminder: '+item.title,{body:item.notes||'Reminder due'})}
+function display(){const el=$('reminders');el.replaceChildren();if(!reminders.length){el.textContent='No reminders set';return}for(const item of reminders){notify(item);const article=document.createElement('article');const label=document.createElement('div');label.textContent=item.title+' — '+new Date(item.due_at).toLocaleString()+' ('+item.repeat+')'+(item.active?'':' [complete]');article.append(label);if(item.notes){const notes=document.createElement('small');notes.textContent=item.notes;article.append(notes)}for(const action of item.active?['complete','snooze','delete']:['toggle','delete']){const button=document.createElement('button');button.className='secondary';button.textContent=action;button.onclick=async()=>{try{await api('/reminders/'+item.id+'/action',{method:'POST',body:{action}});load()}catch(e){$('reminderStatus').textContent=e.message}};article.append(button)}el.append(article)}}
+async function load(){if(!connected)return;try{reminders=await api('/reminders');display()}catch(e){$('reminderStatus').textContent=e.message}}
+$('createReminder').onsubmit=async e=>{e.preventDefault();try{const timestamp=new Date($('when').value);if(!Number.isFinite(timestamp.getTime()))throw Error('Select a valid date/time');await api('/reminders',{method:'POST',body:{title:$('title').value,notes:$('notes').value,due_at:timestamp.toISOString(),timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC',repeat:$('repeat').value}});$('createReminder').reset();$('reminderStatus').textContent='Reminder saved';load()}catch(e){$('reminderStatus').textContent=e.message}};
+setInterval(load,15000);
+</script></body></html>
