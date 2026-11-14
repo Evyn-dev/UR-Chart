@@ -1,0 +1,3 @@
+import type {Client} from './client';
+import type {Checkin,CheckinInput,Trends,Risk} from '../types/api';
+export const checkinsApi=(api:Client)=>({list:(start:string,end:string)=>api<Checkin[]>(`/checkins?start=${start}&end=${end}&limit=100`),create:(body:CheckinInput)=>api<Checkin>('/checkins','POST',body),trends:(start:string,end:string)=>api<Trends>(`/checkins/trends?start=${start}&end=${end}`),risk:(id:string)=>api<Risk>(`/checkins/${id}/risk`),correct:(record:Checkin,observation:CheckinInput,reason:string)=>api<Checkin>(`/checkins/${record.id}`,'PATCH',{expected_version:record.version,observation,reason})});
