@@ -12,12 +12,13 @@ import {Dashboard,MedicationsPage,CheckinPage,ProgressPage,AlertsPage,AssistantP
 const sessionKey='urchart-demo-session';
 function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
  const [token,setToken]=useState('');
+ const [persona,setPersona]=useState<'patient'|'caregiver'>('patient');
  const [working,setWorking]=useState(false);
  const [error,setError]=useState('');
  async function submit(e:React.FormEvent){
   e.preventDefault();if(!token.trim())return;
   setWorking(true);setError('');
-  try{const code=token.trim();const patient=await patientsApi(createClient(code)).me();onLogin(code,patient)}
+  try{const credential=token.trim()+':'+persona;const patient=await patientsApi(createClient(credential)).me();onLogin(credential,patient)}
   catch(e){setError(e instanceof Error?e.message:'Unable to connect.')}
   finally{setWorking(false)}
  }
@@ -30,6 +31,11 @@ function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
   <form onSubmit={submit} className="entry-form">
    <label htmlFor="demo-token">Demo access code</label>
    <div className="field-with-icon"><KeyRound size={18}/><input id="demo-token" value={token} onChange={e=>setToken(e.target.value)} type="password" autoComplete="off" placeholder="Enter your demo code" required/></div>
+   <label htmlFor="demo-persona" style={{marginTop:12}}>Demo role</label>
+   <select id="demo-persona" value={persona} onChange={e=>setPersona(e.target.value as 'patient'|'caregiver')}>
+     <option value="patient">Patient</option>
+     <option value="caregiver">Caregiver (test sharing)</option>
+   </select>
    {error&&<div role="alert" className="feedback error">{error}</div>}
    <button className="btn primary wide" disabled={working} type="submit">{working?'Connecting…':'Enter recovery dashboard'}<ArrowRight size={18}/></button>
   </form>
