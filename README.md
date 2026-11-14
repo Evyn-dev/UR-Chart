@@ -67,6 +67,9 @@ Backend settings load from `backend/.env` when started in that directory. Use [b
 | `DEMO_AUTH_ENABLED`, `DEMO_TOKENS` | Local fictional identity mapping; first authentication mode when enabled |
 | `HOSTED_DEMO_CODE_HASH` | SHA-256 hex hash of a separately managed shared demo code; enables fictional patient/caregiver personas |
 | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | Paired settings for server-side verification of an existing Supabase bearer token when demo modes are off |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase Admin API credential used to verify invited caregiver accounts. Never expose it to frontend code or commit its value. Required in production. |
+| `REDIS_URL` | Shared Redis/Valkey connection used for cross-worker API rate limiting. Required in production; use TLS (`rediss://`) when supported by the host. |
+| `API_RATE_LIMIT_PER_MINUTE`, `SENSITIVE_RATE_LIMIT_PER_MINUTE`, `CAREGIVER_INVITES_PER_HOUR` | Server-enforced general, sensitive-route, and caregiver-invitation limits. Defaults are 120/minute, 20/minute, and 10/hour per client IP. |
 | `AI_PROVIDER` | `disabled` or `approved_instructions`; no generative provider on main |
 | `AI_API_KEY` | Reserved setting; currently unused by merged providers |
 | `RISK_RULES_FILE` | Optional server-controlled rule JSON; default rules are prototype-only |
@@ -74,7 +77,7 @@ Backend settings load from `backend/.env` when started in that directory. Use [b
 
 Login discovers the mode from `/api/health`. Local tokens are submitted unchanged. Hosted demo mode sends the shared code with the selected patient/caregiver persona. The code is not a production identity system. Supabase tokens are verified server-side; there is no email/password login UI in this frontend. The browser keeps the credential in session storage, never in a URL. Do not put secrets in `VITE_*` variables.
 
-Caregiver access requires an invitation to a configured demo identity, acceptance, and explicit sharing permissions. The server enforces permission changes and revocation. A caregiver never receives patient chat or unrestricted account access. For local testing, configure a separate identity and token for the caregiver.
+In local demo mode, caregiver access requires an invitation to a configured synthetic identity, acceptance, and explicit sharing permissions. In real Supabase mode, the server verifies the recipient's Supabase account through the Admin API using the server-only service-role key before creating an invitation. The caregiver must then authenticate as that exact Supabase user and accept. Rate limits use shared Redis counters; production refuses to start without Redis and all required Supabase credentials. The server enforces permission changes and revocation. A caregiver never receives patient chat or unrestricted account access. For local testing, configure a separate identity and token for the caregiver.
 
 ## Database migrations
 
