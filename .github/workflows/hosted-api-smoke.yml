@@ -37,3 +37,16 @@ jobs:
           code=$(curl --max-time 20 --silent --show-error --output /tmp/unauth.json --write-out "%{http_code}" "$url/api/patients/me" || true)
           echo "Unauthenticated patient request: HTTP $code"
           test "$code" = "401"
+      - name: Verify browser CORS preflight from the deployed frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --max-time 20 --silent --show-error --dump-header /tmp/cors.headers --output /tmp/cors.body \
+            -X OPTIONS 'https://ur-chart-api.vercel.app/api/patients/me' \
+            -H 'Origin: https://ur-chart.vercel.app' \
+            -H 'Access-Control-Request-Method: GET' \
+            -H 'Access-Control-Request-Headers: authorization'
+          grep -i -q '^access-control-allow-origin: https://ur-chart.vercel.app' /tmp/cors.headers
+          grep -i -q '^access-control-allow-methods:' /tmp/cors.headers
+          echo "CORS preflight permitted for the production frontend."
+
