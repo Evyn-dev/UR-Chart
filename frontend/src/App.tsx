@@ -6,8 +6,9 @@ import {createClient} from './services/client';
 import {patientsApi} from './services/patients';
 import type {Patient} from './types/api';
 import {Shell} from './components/Shell';
+import {ClaraAssistant} from './components/ClaraAssistant';
 import {FeaturesPage} from './pages/FeaturesPage';
-import {Dashboard,MedicationsPage,CheckinPage,ProgressPage,AlertsPage,AssistantPage,CaregiversPage,SettingsPage,UnavailablePage} from './pages/Pages';
+import {Dashboard,MedicationsPage,CheckinPage,ProgressPage,AlertsPage,CaregiversPage,SettingsPage,UnavailablePage} from './pages/Pages';
 
 const sessionKey='urchart-demo-session';
 function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
@@ -82,10 +83,11 @@ export default function App(){
   if(!token||!patient)return pathname==='/features'?<FeaturesPage guest/>:<DemoLogin onLogin={login}/>;
   return <SessionProvider token={token} initialPatient={patient} signOut={signOut}>
     <Routes><Route element={<Shell/>}>
-      <Route path="/" element={<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<AssistantPage/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
+      <Route path="/" element={<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<Dashboard/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
       <Route path="/appointments" element={<UnavailablePage title="Appointments" reason="Appointments are not connected to a backend service yet."/>}/>
       <Route path="/messages" element={<UnavailablePage title="Care team messages" reason="Secure care team messaging is not connected yet. Use your discharge paperwork to contact your clinical team."/>}/>
       <Route path="*" element={<Navigate to="/" replace/>}/>
     </Route></Routes>
+    <ClaraAssistant/>
   </SessionProvider>
 }
