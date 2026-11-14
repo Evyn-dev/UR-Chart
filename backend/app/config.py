@@ -21,8 +21,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def secure_defaults(self):
-        if self.app_env == "production" and self.demo_auth_enabled:
-            raise ValueError("Demo authentication is forbidden in production")
+        if self.app_env == "production" and (
+            self.demo_auth_enabled or self.hosted_demo_code_hash or self.demo_tokens
+        ):
+            raise ValueError("All demo authentication methods and demo tokens are forbidden in production")
         if self.hosted_demo_code_hash and not re.fullmatch(r"[0-9a-f]{64}", self.hosted_demo_code_hash):
             raise ValueError("Hosted demo code hash must be SHA-256 hex")
         if any(len(token) < 32 or not user.strip() for token, user in self.demo_tokens.items()):
