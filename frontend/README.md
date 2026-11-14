@@ -41,6 +41,8 @@ npm run dev
 
 Open **http://127.0.0.1:5173**. Paste your synthetic token into the demo login. Vite proxies `/api` to the FastAPI server at `http://127.0.0.1:8000`, avoiding local CORS issues. Do not put a token in the source code, URL, or Vite environment variables.
 
+The sign-in screen reads `/api/health` to select the login mode. Local demo tokens are sent unchanged and identify their configured user. The hosted shared-code demo shows a patient/caregiver selector and appends that role only for hosted-code authentication. Deploy the updated API alongside the frontend so it exposes `login_mode`.
+
 ## Functional features
 
 - Demo-session entry verified against `/api/patients/me` (token only in browser session storage).

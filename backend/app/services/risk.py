@@ -15,7 +15,7 @@ FALLBACK_GUIDANCE = "This check-in has not been clinically assessed. Contact you
 
 # Increment whenever deterministic screening behavior changes. Including this in
 # the evaluation fingerprint prevents old evaluations from suppressing new checks.
-SCREENING_ENGINE_VERSION = "2"
+SCREENING_ENGINE_VERSION = "3"
 
 EMERGENCY_PHRASES = (
     "chest pain", "chest pressure", "pressure in my chest",
@@ -41,16 +41,20 @@ def _normalize_text(value):
 
 
 def _phrase_is_reported(text, phrase):
-    """Return false when a short, nearby negation clearly negates the phrase."""
-    normalized = _normalize_text(text)
+    """Check every occurrence, keeping negation within its sentence/clause.
+
+    This remains a limited keyword screen. In particular, a negated earlier
+    occurrence must not hide a later affirmative report of the same phrase.
+    """
     target = _normalize_text(phrase)
-    match = re.search(r"(?<!\w)" + re.escape(target) + r"(?!\w)", normalized)
-    if match is None:
-        return False
-    preceding_words = normalized[:match.start()].split()[-4:]
-    if any(word in NEGATION_WORDS for word in preceding_words):
-        return False
-    return True
+    clauses = re.split(r"[.!?;\n]|\b(?:but|however)\b", str(text), flags=re.IGNORECASE)
+    for clause in clauses:
+        normalized = _normalize_text(clause)
+        for match in re.finditer(r"(?<!\w)" + re.escape(target) + r"(?!\w)", normalized):
+            preceding_words = normalized[:match.start()].split()[-4:]
+            if not any(word in NEGATION_WORDS for word in preceding_words):
+                return True
+    return False
 
 
 def screen_free_text(checkin):

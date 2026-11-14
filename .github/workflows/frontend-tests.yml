@@ -38,7 +38,6 @@ jobs:
         run: npm run build
       - name: Audit production dependencies (high and critical block CI)
         run: npm audit --omit=dev --audit-level=high
-      - name: Audit all dependencies (report dev tooling risks)
+      - name: Audit all dependencies (including dev tooling)
         if: always()
-        continue-on-error: true
         run: npm audit --audit-level=moderate

@@ -2,6 +2,7 @@ import {useEffect,useState} from 'react';
 import {Link,Navigate,Route,Routes,useLocation} from 'react-router-dom';
 import {Activity,ArrowRight,HeartPulse,KeyRound,LockKeyhole,ShieldAlert} from 'lucide-react';
 import {SessionProvider} from './hooks/session';
+import {useResource} from './hooks/useResource';
 import {createClient} from './services/client';
 import {patientsApi} from './services/patients';
 import type {Patient} from './types/api';
@@ -10,15 +11,17 @@ import {FeaturesPage} from './pages/FeaturesPage';
 import {Dashboard,MedicationsPage,CheckinPage,ProgressPage,AlertsPage,AssistantPage,CaregiversPage,SettingsPage,UnavailablePage} from './pages/Pages';
 
 const sessionKey='urchart-demo-session';
-function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
+export function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
+ const health=useResource(()=>createClient('')<{login_mode:'demo_token'|'demo_code'|'supabase'|'unconfigured'}>('/health'),[]);
+ const hostedDemo=health.data?.login_mode==='demo_code';
  const [token,setToken]=useState('');
  const [persona,setPersona]=useState<'patient'|'caregiver'>('patient');
  const [working,setWorking]=useState(false);
  const [error,setError]=useState('');
  async function submit(e:React.FormEvent){
-  e.preventDefault();if(!token.trim())return;
+  e.preventDefault();if(!token.trim()||!health.data||health.data.login_mode==='unconfigured')return;
   setWorking(true);setError('');
-  try{const credential=token.trim()+':'+persona;const patient=await patientsApi(createClient(credential)).me();onLogin(credential,patient)}
+  try{const credential=hostedDemo?token.trim()+':'+persona:token.trim();const patient=await patientsApi(createClient(credential)).me();onLogin(credential,patient)}
   catch(e){setError(e instanceof Error?e.message:'Unable to connect.')}
   finally{setWorking(false)}
  }
@@ -29,18 +32,20 @@ function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
   <p>Explore medication tracking, check-ins, progress and caregiver tools in one recovery space.</p>
   <div className="entry-features"><span><Activity size={16}/> Daily recovery tracking</span><span><ShieldAlert size={16}/> Clear safety guidance</span></div>
   <form onSubmit={submit} className="entry-form">
-   <label htmlFor="demo-token">Demo access code</label>
-   <div className="field-with-icon"><KeyRound size={18}/><input id="demo-token" value={token} onChange={e=>setToken(e.target.value)} type="password" autoComplete="off" placeholder="Enter your demo code" required/></div>
-   <label htmlFor="demo-persona" style={{marginTop:12}}>Demo role</label>
+   <label htmlFor="demo-token">{hostedDemo?'Demo access code':'Access token'}</label>
+   <div className="field-with-icon"><KeyRound size={18}/><input id="demo-token" value={token} onChange={e=>setToken(e.target.value)} type="password" autoComplete="off" placeholder={hostedDemo?'Enter your demo code':'Enter your access token'} required/></div>
+   {hostedDemo&&<><label htmlFor="demo-persona" style={{marginTop:12}}>Demo role</label>
    <select id="demo-persona" value={persona} onChange={e=>setPersona(e.target.value as 'patient'|'caregiver')}>
      <option value="patient">Patient</option>
      <option value="caregiver">Caregiver (test sharing)</option>
-   </select>
+   </select></>}
+   {health.error&&<div role="alert" className="feedback error">{health.error} <button type="button" onClick={health.reload}>Retry connection</button></div>}
+   {health.data?.login_mode==='unconfigured'&&<div role="alert" className="feedback error">Sign-in is not configured for this service.</div>}
    {error&&<div role="alert" className="feedback error">{error}</div>}
-   <button className="btn primary wide" disabled={working} type="submit">{working?'Connecting…':'Enter recovery dashboard'}<ArrowRight size={18}/></button>
+   <button className="btn primary wide" disabled={working||health.loading||!health.data||health.data.login_mode==='unconfigured'} type="submit">{working||health.loading?'Connecting…':'Enter recovery dashboard'}<ArrowRight size={18}/></button>
   </form>
   <Link to="/features" className="entry-explore">Explore all features <ArrowRight size={16}/></Link>
-  <p className="entry-foot"><LockKeyhole size={14}/> No email required. Shared fictional patient for demonstration only. Anyone holding the code can access its records. Never enter real health data.</p>
+  <p className="entry-foot"><LockKeyhole size={14}/> {hostedDemo?'No email required. Shared fictional patient for demonstration only. Anyone holding the code can access its records.':'Use the token assigned to your fictional demo identity.'} Never enter real health data.</p>
  </main><aside className="entry-aside"><div className="aside-heart"><HeartPulse size={72} strokeWidth={1.3}/></div><span className="eyebrow">ONE DAY AT A TIME</span><h2>Good care should<br/>feel less complicated.</h2><p>Understand what's next. Keep up with your routine. Have your support system close by.</p><div className="aside-stats"><div><b>01</b><span>Check in</span></div><div><b>02</b><span>Stay on track</span></div><div><b>03</b><span>Feel supported</span></div></div></aside></div>
 }
 export default function App(){
