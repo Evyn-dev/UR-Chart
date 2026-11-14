@@ -18,6 +18,8 @@ def get_db(request: Request):
 
 def authenticated_identity(settings, credentials):
     """Verify bearer tokens server-side, never from unverified JWT claims."""
+    if not settings.demo_auth_enabled and not (settings.supabase_url and settings.supabase_publishable_key):
+        raise HTTPException(503, "Authentication provider not configured")
     if not credentials:
         raise HTTPException(401, "Valid bearer token required", headers={"WWW-Authenticate": "Bearer"})
     token = credentials.credentials
