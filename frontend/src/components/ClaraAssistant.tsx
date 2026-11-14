@@ -32,6 +32,7 @@ export function ClaraAssistant(){
  const [speaking,setSpeaking]=useState(false);
  const [muted,setMuted]=useState(false);
  const [micActive,setMicActive]=useState(false);
+ const [handsFree,setHandsFree]=useState(false);
  const [voiceStatus,setVoiceStatus]=useState('Microphone off. Tap to talk to Clara.');
  const [emergency,setEmergency]=useState(false);
  const [showHistory,setShowHistory]=useState(false);
@@ -41,6 +42,8 @@ export function ClaraAssistant(){
  const recognizer=useRef<Recognizer|null>(null);
  const running=useRef(false);
  const keepListening=useRef(false);
+ const handsFreeRef=useRef(false);
+ const pausedForSpeech=useRef(false);
  const micTimeout=useRef<ReturnType<typeof setTimeout>|null>(null);
  const direct=useRef(false);
  const awaitingWake=useRef(false);
@@ -60,16 +63,30 @@ export function ClaraAssistant(){
  useEffect(()=>{if(open)input.current?.focus()},[open]);
  useEffect(()=>{if(open)chatApi(api).list().then(items=>setHistory(items)).catch(()=>{/* history optional */})},[open,api]);
 
+ function pauseForSpeech(){
+  if(!handsFreeRef.current)return;
+  pausedForSpeech.current=true;
+  if(running.current){running.current=false;try{recognizer.current?.stop()}catch{/* stopped */}}
+ }
+ function resumeWake(){
+  if(!handsFreeRef.current||direct.current||greetingActive.current||sending.current||pausedForSpeech.current)return;
+  const r=recognizer.current;
+  if(!r||running.current)return;
+  try{keepListening.current=true;r.start();running.current=true;setVoiceStatus('Hands-free active — say “Clara”.')}
+  catch{keepListening.current=false;handsFreeRef.current=false;setHandsFree(false);setVoiceStatus('Hands-free stopped. Tap to retry.')}
+ }
  function speak(text:string){
   if(muteRef.current||!('speechSynthesis' in window))return;
+  pauseForSpeech();
   window.speechSynthesis.cancel();
   const utterance=new SpeechSynthesisUtterance(text.replace(/[*#_]/g,'').slice(0,2600));
   utterance.voice=selectVoice(window.speechSynthesis.getVoices())||null;
   utterance.lang=utterance.voice?.lang||'en-US';
   utterance.rate=.94;utterance.pitch=1.04;utterance.volume=1;
   utterance.onstart=()=>setSpeaking(true);
-  utterance.onend=()=>{setSpeaking(false);utteranceRef.current=null};
-  utterance.onerror=()=>{setSpeaking(false);utteranceRef.current=null};
+  const finish=()=>{setSpeaking(false);utteranceRef.current=null;pausedForSpeech.current=false;resumeWake()};
+  utterance.onend=finish;
+  utterance.onerror=finish;
   utteranceRef.current=utterance;
   window.speechSynthesis.speak(utterance);
  }
@@ -79,13 +96,14 @@ export function ClaraAssistant(){
   if(micTimeout.current){clearTimeout(micTimeout.current);micTimeout.current=null}
   setMicActive(false);
   if(running.current){running.current=false;try{recognizer.current?.stop()}catch{/* already stopped */}}
+  if(handsFreeRef.current&&!greetingActive.current&&!pausedForSpeech.current)resumeWake();
  }
  function startMic(){
   const r=recognizer.current;
   if(!r)return;
   if(micTimeout.current)clearTimeout(micTimeout.current);
   try{r.start();running.current=true;setVoiceStatus('Listening — ask your question now.');
-   micTimeout.current=setTimeout(()=>{if(direct.current){stopMic();setVoiceStatus('Microphone off. Tap to try again.')}},15000);
+   micTimeout.current=setTimeout(()=>{if(direct.current){stopMic();setVoiceStatus(handsFreeRef.current?'Hands-free active — say “Clara”.':'Microphone off. Tap to try again.')}},15000);
   }catch{stopMic();setVoiceStatus('Could not start microphone. Check browser permissions.')}
  }
  function greetOnActivation(){
@@ -123,6 +141,7 @@ export function ClaraAssistant(){
   const message=raw.trim();
   if(!message||sending.current)return;
   sending.current=true;setBusy(true);setError('');setOpen(true);setDraft('');
+  if(handsFreeRef.current)pauseForSpeech();
   // Show what the user said while the response is being generated.
   const optimisticId='local-'+Date.now().toString();
   setMessages(previous=>[...previous,{id:optimisticId,role:'user',content:message,created_at:new Date().toISOString(),updated_at:new Date().toISOString()}]);
@@ -135,7 +154,7 @@ export function ClaraAssistant(){
   }catch(e){
    setMessages(previous=>previous.filter(item=>item.id!==optimisticId));
    setDraft(message);setError(errorText(e));
-  }finally{sending.current=false;setBusy(false)}
+  }finally{sending.current=false;setBusy(false);if(!('speechSynthesis' in window)||muteRef.current){pausedForSpeech.current=false;resumeWake()}}
  }
  sendRef.current=(value:string)=>{void sendMessage(value)};
  function submit(e:FormEvent){e.preventDefault();void sendMessage(draft)}
@@ -161,7 +180,7 @@ export function ClaraAssistant(){
    for(let i=event.resultIndex;i<event.results.length;i++){
     const phrase=event.results[i][0]?.transcript?.trim()||'';
     if(!phrase||greetingActive.current)continue;
-    const lower=phrase.toLowerCase();
+    if(!handsFreeRef.current&&!direct.current&&!awaitingWake.current)continue;
     if(/^emergency([\s.!?,]|$)/i.test(phrase)){showEmergency();return}
     // The wake phrase and name have replaced "Chart Chart".
     const match=/\bclara\b/i.exec(phrase);
@@ -174,14 +193,14 @@ export function ClaraAssistant(){
     }
     if(direct.current||awaitingWake.current){
      stopMic();
-     setVoiceStatus('Microphone off. Question sent.');
+     setVoiceStatus(handsFreeRef.current?'Hands-free active — responding…':'Microphone off. Question sent.');
      sendRef.current(phrase);return;
     }
    }
   };
   r.onerror=event=>{
    if(event.error==='not-allowed'||event.error==='service-not-allowed'){
-    keepListening.current=false;running.current=false;direct.current=false;awaitingWake.current=false;
+    keepListening.current=false;handsFreeRef.current=false;setHandsFree(false);running.current=false;direct.current=false;awaitingWake.current=false;
     setMicActive(false);setVoiceStatus('Microphone access was blocked. Allow it in browser settings and try again.');
    }else if(event.error!=='no-speech'&&event.error!=='aborted'){
     setVoiceStatus('Voice issue: '+event.error+'. Tap the mic to retry.');
@@ -189,11 +208,11 @@ export function ClaraAssistant(){
   };
   r.onend=()=>{
    running.current=false;
-   // Privacy: do not automatically reactivate the microphone.
    if(!greetingActive.current&&direct.current){direct.current=false;setMicActive(false);setVoiceStatus('Microphone off. Tap to speak again.')}
+   if(handsFreeRef.current&&!greetingActive.current&&!pausedForSpeech.current&&!direct.current)resumeWake();
   };
   return()=>{
-   keepListening.current=false;greetingActive.current=false;
+   keepListening.current=false;handsFreeRef.current=false;greetingActive.current=false;
    if(micTimeout.current)clearTimeout(micTimeout.current);
    r.onresult=null;r.onerror=null;r.onend=null;
    try{r.stop()}catch{/* already stopped */}
@@ -201,13 +220,21 @@ export function ClaraAssistant(){
    if('speechSynthesis' in window)window.speechSynthesis.cancel();
   };
  },[]);
+ function toggleHandsFree(){
+  const next=!handsFreeRef.current;
+  if(!next){handsFreeRef.current=false;setHandsFree(false);stopMic();pausedForSpeech.current=false;setVoiceStatus('Hands-free off. Microphone off.');return}
+  if(!recognizer.current){setVoiceStatus('Hands-free voice is unavailable in this browser.');return}
+  handsFreeRef.current=true;setHandsFree(true);keepListening.current=true;
+  setVoiceStatus('Hands-free active — say “Clara” to open the assistant.');
+  if(!direct.current&&!greetingActive.current)resumeWake();
+ }
  function tapMic(){
   const r=recognizer.current;
   if(!r){setVoiceStatus('Speech recognition unavailable. Please type your question.');return}
   if(direct.current||awaitingWake.current){
    stopMic();greetingActive.current=false;
    if('speechSynthesis' in window)window.speechSynthesis.cancel();
-   setSpeaking(false);setVoiceStatus('Microphone off. Tap to speak again.');return;
+   setSpeaking(false);setVoiceStatus(handsFreeRef.current?'Hands-free active — say “Clara”.':'Microphone off. Tap to speak again.');return;
   }
   greetOnActivation();
  }
@@ -216,6 +243,7 @@ export function ClaraAssistant(){
   if(next&&'speechSynthesis' in window){window.speechSynthesis.cancel();setSpeaking(false)}
  }
  return <>
+   <button type="button" className={'clara-handsfree-toggle'+(handsFree?' is-on':'')} onClick={toggleHandsFree} aria-pressed={handsFree} aria-label={handsFree?'Turn off hands-free Clara wake word':'Enable hands-free Clara wake word'} title={handsFree?'Wake-word microphone on: tap to turn off':'Enable hands-free “Clara” wake word'}>{handsFree?<Mic size={16}/>:<MicOff size={16}/>}<span>{handsFree?'Wake on':'Wake off'}</span></button>
    {!open&&<button type="button" className="clara-launcher" onClick={()=>setOpen(true)} aria-label="Open Clara recovery assistant" title="Ask Clara">
      <HeartPulse size={28}/><span>Clara</span>
    </button>}
