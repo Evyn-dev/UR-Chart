@@ -56,3 +56,18 @@ jobs:
         run: python -m alembic check
       - name: Validate backend tests against PostgreSQL
         run: python -m pytest -q
+
+      - name: Export migration-tested schema (DDL only, no patient records)
+        shell: bash
+        run: |
+          set -euo pipefail
+          db_container="$(docker ps --filter 'ancestor=postgres:17' --format '{{.ID}}' | head -n 1)"
+          if [ -z "$db_container" ]; then
+            echo "PostgreSQL service container not found" >&2
+            exit 1
+          fi
+          docker exec -e PGPASSWORD=synthetic-ci-only "$db_container" pg_dump \
+            --username=urchart --dbname=urchart_test --schema=public \
+            --schema-only --no-owner --no-privileges \
+            > "$RUNNER_TEMP/urchart-schema.sql"
+          python -c 'import base64,os,pathlib; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"urchart-schema.sql"; print("URCHART_SCHEMA_B64_BEGIN"); print(base64.b64encode(p.read_bytes()).decode()); print("URCHART_SCHEMA_B64_END")'
