@@ -22,7 +22,7 @@ import {SettingsPage} from './pages/SettingsPage';
 import {UnavailablePage} from './pages/UnavailablePage';
 
 const sessionKey='urchart-demo-session';
-export function DemoLogin({onLogin,onOpenDemo}:{onLogin:(token:string,patient:Patient)=>void;onOpenDemo:()=>void}){
+export function DemoLogin({onLogin,onOpenDemo}:{onLogin:(token:string,patient:Patient)=>void;onOpenDemo?:()=>void}){
  const health=useResource(()=>createClient('')<{login_mode:'demo_token'|'demo_code'|'supabase'|'unconfigured'}>('/health'),[]);
  const hostedDemo=health.data?.login_mode==='demo_code';
  const [token,setToken]=useState('');
@@ -59,7 +59,7 @@ export function DemoLogin({onLogin,onOpenDemo}:{onLogin:(token:string,patient:Pa
      {error&&<div role="alert" className="feedback error">{error}</div>}
      <button className="btn primary wide" disabled={working||health.loading||!health.data||health.data.login_mode==='unconfigured'} type="submit">{working||health.loading?'Connecting…':'Enter recovery dashboard'}<ArrowRight size={18}/></button>
     </form>
-    <button type="button" className="btn wide" style={{marginTop:12}} onClick={onOpenDemo}>Open patient demo</button>
+    {onOpenDemo&&<button type="button" className="btn wide" style={{marginTop:12}} onClick={onOpenDemo}>Open patient demo</button>}
     <p className="entry-foot"><LockKeyhole size={14}/> {hostedDemo?'No email required. Shared fictional patient for demonstration only. Anyone holding the code can access its records.':'Use the token assigned to your fictional demo identity.'} Never enter real health data.</p>
    </section>
   </main>
