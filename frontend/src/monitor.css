@@ -145,3 +145,14 @@
 .feature-hub-guest .feature-tile-icon{background:#164632}
 .feature-hub-guest .feature-important,.feature-hub-guest .feature-start{background:#123223;border-color:#326747;color:#d2f3de}
 .feature-hub-guest .feature-important strong,.feature-hub-guest .feature-start strong{color:#edfff4}
+
+/* Read-only caregiver monitoring cards */
+.caregiver-summary{display:grid;gap:13px;margin-top:16px;padding:15px;background:#112e20;border:1px solid #2d6c48;border-radius:15px;color:#e8fff2}
+.caregiver-summary h3{margin:0;font-size:17px;color:#eafff4}
+.caregiver-summary-section{padding:14px;background:#0c2218;border:1px solid #28563b;border-radius:12px}
+.caregiver-summary-section>strong{display:block;margin-bottom:9px;color:#4aefa0;font-size:13px}
+.caregiver-summary-section dl{display:grid;gap:8px;margin:0}
+.caregiver-summary-section dl div{display:flex;justify-content:space-between;gap:15px;font-size:12px;border-bottom:1px solid #254d37;padding-bottom:5px}
+.caregiver-summary-section dt{color:#b5d4c1;text-transform:capitalize}
+.caregiver-summary-section dd{margin:0;text-align:right;color:#ecfff4}
+.caregiver-summary-section p{color:#c2e1cd}
