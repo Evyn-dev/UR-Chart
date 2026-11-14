@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import Settings
 from app.database import Base, make_engine, session_factory
 from app.models import SharedDocument
-from app.api import patients, medications, checkins, alerts, chat, health, caregivers, corrections, curriculum, documents
+from app.api import patients, medications, checkins, alerts, chat, health, caregivers, corrections, curriculum, documents, demo
 from app.services.ai import build_provider
 from app.utils.errors import install_errors
 from app.schemas import ErrorResponse
