@@ -81,7 +81,10 @@ def test_checkin_correction_audit_trends_and_emergency_preservation(client, auth
     assert len(alerts) == 1 and alerts[0]["severity"] == "emergency" and alerts[0]["checkin_version"] == 2
     body.update(expected_version=2, observation={"day": "2026-01-01", "pain_level": 1}, reason="Correct synthetic symptom")
     assert client.patch(path, headers=auth, json=body).status_code == 200
-    assert client.get(path + "/risk", headers=auth).json()["data"]["alerts"][0]["status"] == "open"
+    revised_risk = client.get(path + "/risk", headers=auth).json()["data"]
+    assert revised_risk["alerts"] == []
+    assert len(revised_risk["historical_alerts"]) == 1
+    assert revised_risk["historical_alerts"][0]["checkin_version"] == 2
     assert len(client.get(path + "/audit", headers=auth).json()["data"]) == 2
     assert client.get(path + "/audit", headers=other).status_code == 404
     trend = client.get("/api/checkins/trends?start=2026-01-01&end=2026-01-02", headers=auth).json()["data"]

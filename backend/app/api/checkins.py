@@ -37,8 +37,13 @@ def detail(id: UUID, patient=Depends(current_patient), db=Depends(get_db)):
 
 
 @router.get("/{id}/risk", response_model=Data[RiskResult])
-def assessment(id: UUID, patient=Depends(current_patient), db=Depends(get_db)):
-    return {"data": risk.result(db, owned(db, Checkin, id, patient.id))}
+def assessment(id: UUID, request: Request, patient=Depends(current_patient), db=Depends(get_db)):
+    record = owned(db, Checkin, id, patient.id)
+    # Re-evaluate when rules or screening-engine versions change, including
+    # records created before a newer screening implementation was deployed.
+    risk.evaluate(db, record, request.app.state.settings)
+    db.commit()
+    return {"data": risk.result(db, record)}
 
 
 @router.post("/{id}/evaluate", response_model=Data[RiskResult])

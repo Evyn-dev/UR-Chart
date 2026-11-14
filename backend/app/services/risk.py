@@ -1,6 +1,7 @@
 """Deterministic, auditable rule matching. No diagnosis or LLM decision-making."""
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Literal
 from datetime import timedelta
@@ -11,6 +12,80 @@ from app.models import Alert, Checkin, RiskEvaluation
 
 EMERGENCY_GUIDANCE = "For a possible immediate emergency, contact emergency services now (911 in the United States; your local emergency number elsewhere). Do not wait for this app or a reply from your care team."
 FALLBACK_GUIDANCE = "This check-in has not been clinically assessed. Contact your care team about concerning or worsening symptoms. " + EMERGENCY_GUIDANCE
+
+# Increment whenever deterministic screening behavior changes. Including this in
+# the evaluation fingerprint prevents old evaluations from suppressing new checks.
+SCREENING_ENGINE_VERSION = "2"
+
+EMERGENCY_PHRASES = (
+    "chest pain", "chest pressure", "pressure in my chest",
+    "shortness of breath", "short of breath", "difficulty breathing",
+    "trouble breathing", "cannot breathe", "can't breathe", "cant breathe",
+    "fainting", "fainted", "passed out", "loss of consciousness",
+    "face drooping", "arm weakness", "slurred speech", "stroke symptoms",
+    "uncontrolled bleeding", "bleeding that will not stop", "blue lips",
+)
+URGENT_PHRASES = (
+    "fever", "high temperature", "incision redness", "red incision",
+    "wound redness", "wound drainage", "draining wound", "pus",
+    "increasing swelling", "worsening swelling", "dizziness",
+    "irregular heartbeat", "racing heartbeat", "worsening pain",
+    "pain getting worse",
+)
+NEGATION_WORDS = {"no", "not", "never", "denies", "deny", "without", "negative"}
+
+
+def _normalize_text(value):
+    """Normalize punctuation and whitespace for conservative phrase matching."""
+    return re.sub(r"[^a-z0-9]+", " ", str(value).lower()).strip()
+
+
+def _phrase_is_reported(text, phrase):
+    """Return false when a short, nearby negation clearly negates the phrase."""
+    normalized = _normalize_text(text)
+    target = _normalize_text(phrase)
+    match = re.search(r"(?<!\w)" + re.escape(target) + r"(?!\w)", normalized)
+    if match is None:
+        return False
+    preceding_words = normalized[:match.start()].split()[-4:]
+    if any(word in NEGATION_WORDS for word in preceding_words):
+        return False
+    return True
+
+
+def screen_free_text(checkin):
+    """Screen symptom entries and narrative notes for known warning phrases.
+
+    This is a conservative prototype keyword screen, not clinical triage.
+    Ordinary notes alone do not create alerts.
+    """
+    symptom_entries = [str(item) for item in (checkin.symptoms or [])]
+    narrative_entries = [checkin.note] if checkin.note else []
+    sources = [
+        {"source": "symptoms", "text": item} for item in symptom_entries
+    ] + [
+        {"source": "note", "text": item} for item in narrative_entries
+    ]
+
+    emergency_matches = []
+    urgent_matches = []
+    for source in sources:
+        for phrase in EMERGENCY_PHRASES:
+            if _phrase_is_reported(source["text"], phrase):
+                emergency_matches.append({**source, "matched_phrase": phrase})
+        for phrase in URGENT_PHRASES:
+            if _phrase_is_reported(source["text"], phrase):
+                urgent_matches.append({**source, "matched_phrase": phrase})
+
+    return {
+        "emergency": emergency_matches,
+        "urgent": urgent_matches,
+        "unclassified_symptoms": [
+            item for item in symptom_entries
+            if not any(_phrase_is_reported(item, phrase)
+                       for phrase in EMERGENCY_PHRASES + URGENT_PHRASES)
+        ],
+    }
 
 
 class Rule(BaseModel):
@@ -98,13 +173,14 @@ def evaluate(db, checkin, settings):
     try:
         ruleset = load_rules(settings)
         snapshot = ruleset.model_dump(mode="json")
-        fingerprint = hashlib.sha256(json.dumps(snapshot, sort_keys=True).encode()).hexdigest()
+        fingerprint_payload = {"screening_engine_version": SCREENING_ENGINE_VERSION, "ruleset": snapshot}
+        fingerprint = hashlib.sha256(json.dumps(fingerprint_payload, sort_keys=True).encode()).hexdigest()
     except (OSError, ValueError):
         ruleset, snapshot, fingerprint = None, {}, "unavailable"
     existing = db.scalar(select(RiskEvaluation).where(RiskEvaluation.checkin_id == checkin.id, RiskEvaluation.ruleset_hash == fingerprint, RiskEvaluation.checkin_version == checkin.version))
     if existing:
         return existing
-    details = {"checkin_version": checkin.version, "ruleset": snapshot, "matched_rules": [], "guidance": FALLBACK_GUIDANCE, "prototype_only": True}
+    details = {"checkin_version": checkin.version, "screening_engine_version": SCREENING_ENGINE_VERSION, "ruleset": snapshot, "matched_rules": [], "guidance": FALLBACK_GUIDANCE, "prototype_only": True}
     status = "unavailable" if ruleset is None else "evaluated"
     if ruleset is None or not ruleset.rules:
         status = "unavailable"
@@ -125,9 +201,34 @@ def evaluate(db, checkin, settings):
                 persist_alert(db, checkin, rule.id, rule.version, rule.severity, guidance,
                     {"observations": evidence, "rule": rule.model_dump(mode="json"), "ruleset_hash": fingerprint}, rule.prototype_only)
         unassessed = [r["code"] for r in checkin.symptom_reports if r["present"] and r["code"] not in covered]
-        if checkin.symptoms or checkin.note or unassessed:
-            persist_alert(db, checkin, "unassessed_observations", "1", "needs_clinical_review", FALLBACK_GUIDANCE,
-                {"unmatched_codes": unassessed, "free_text_present": bool(checkin.symptoms or checkin.note)})
+        free_text = screen_free_text(checkin)
+        details["free_text_screening"] = free_text
+
+        if free_text["emergency"]:
+            persist_alert(
+                db, checkin, "free_text_emergency", SCREENING_ENGINE_VERSION,
+                "emergency",
+                "A possible emergency symptom was mentioned in free text. " + EMERGENCY_GUIDANCE,
+                {"matches": free_text["emergency"], "screening_engine_version": SCREENING_ENGINE_VERSION},
+            )
+        elif free_text["urgent"]:
+            persist_alert(
+                db, checkin, "free_text_urgent", SCREENING_ENGINE_VERSION,
+                "urgent",
+                "A potentially urgent symptom was mentioned in free text. Contact your care team promptly. " + EMERGENCY_GUIDANCE,
+                {"matches": free_text["urgent"], "screening_engine_version": SCREENING_ENGINE_VERSION},
+            )
+
+        if unassessed or free_text["unclassified_symptoms"]:
+            persist_alert(
+                db, checkin, "unassessed_observations", "1",
+                "needs_clinical_review", FALLBACK_GUIDANCE,
+                {
+                    "unmatched_codes": unassessed,
+                    "unclassified_symptoms": free_text["unclassified_symptoms"],
+                    "free_text_present": bool(checkin.symptoms),
+                },
+            )
     evaluation = RiskEvaluation(checkin_id=checkin.id, checkin_version=checkin.version, ruleset_hash=fingerprint, status=status, details=details)
     try:
         with db.begin_nested():
@@ -139,7 +240,26 @@ def evaluate(db, checkin, settings):
 
 
 def result(db, checkin):
-    evaluation = db.scalar(select(RiskEvaluation).where(RiskEvaluation.checkin_id == checkin.id).order_by(RiskEvaluation.created_at.desc()).limit(1))
-    alerts = db.scalars(select(Alert).where(Alert.checkin_id == checkin.id, Alert.patient_id == checkin.patient_id).order_by(Alert.created_at)).all()
-    return {"status": evaluation.status if evaluation else "not_evaluated", "prototype_only": evaluation.details["prototype_only"] if evaluation else True,
-        "alerts": alerts, "guidance": FALLBACK_GUIDANCE}
+    evaluation = db.scalar(
+        select(RiskEvaluation)
+        .where(
+            RiskEvaluation.checkin_id == checkin.id,
+            RiskEvaluation.checkin_version == checkin.version,
+        )
+        .order_by(RiskEvaluation.created_at.desc())
+        .limit(1)
+    )
+    all_alerts = db.scalars(
+        select(Alert)
+        .where(Alert.checkin_id == checkin.id, Alert.patient_id == checkin.patient_id)
+        .order_by(Alert.created_at, Alert.id)
+    ).all()
+    current_alerts = [alert for alert in all_alerts if alert.checkin_version == checkin.version]
+    historical_alerts = [alert for alert in all_alerts if alert.checkin_version != checkin.version]
+    return {
+        "status": evaluation.status if evaluation else "not_evaluated",
+        "prototype_only": evaluation.details["prototype_only"] if evaluation else True,
+        "alerts": current_alerts,
+        "historical_alerts": historical_alerts,
+        "guidance": FALLBACK_GUIDANCE,
+    }
