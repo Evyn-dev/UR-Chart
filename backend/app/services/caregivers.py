@@ -114,6 +114,10 @@ def dashboard(db, caregiver, id, limit=20, offset=0):
         count = sum(d["due"] for d in summary["unrecorded_doses"])
         if count:
             tasks.append({"type": "dose_record", "count": count, "description": "Scheduled doses have no recorded status. This does not prove they were missed."})
+        missed = sum(value["confirmed_missed"] for value in summary["adherence"].values())
+        if missed >= 2:
+            tasks.append({"type": "medication_followup", "count": missed,
+                "description": "At least two doses were explicitly marked missed in the record. Check in supportively with the patient; do not change their medication plan."})
     if "alerts" in permissions:
         alerts = db.scalars(select(Alert).where(Alert.patient_id == patient.id, Alert.category == "recovery_safety",
             Alert.severity.in_(relationship.alert_severities)).order_by(
