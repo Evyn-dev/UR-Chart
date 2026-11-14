@@ -44,7 +44,7 @@ DEMO_CHECKINS = (
 WEEK_PLAN_TITLE = "Fictional week-long progress and follow-up (demo)"
 WEEK_PLAN = """FICTIONAL TRAINING DATA ONLY. This is a seven-day sample record, not medical instructions from a real care team.
 Jordan Ellis's demo recovery week includes daily symptom, pain, energy and activity check-ins; a sample medication schedule and dose log; and a simulated safety-center follow-up notice.
-The fictional caregiver at home can be invited via Caregiver access, but sharing is NOT automatic. A caregiver must accept a patient-issued invitation before viewing selected summaries.
+For this explicitly fictional demonstration, Jordan Ellis has a preaccepted synthetic caregiver invitation. The caregiver may view the selected recovery summaries; actual patients would require explicit consent.
 Example follow-up: patient plans to discuss sleep, fatigue, comfortable walking, surgical-site care, and medicine questions at a fictional 2026-11-20 visit. There is no real appointment scheduling feature connected to the demo.
 Example care-team messaging is not connected; any appointment date or communication mentioned here is part of the fictional narrative only.
 No live medical monitoring, automatic outreach, or clinician review occurs. If real symptoms are concerning, follow the person's actual discharge paperwork and contact their care team. For life-threatening symptoms call emergency services (911 in the USA).
@@ -128,14 +128,20 @@ def seed_sample_alert(db, patient, day):
         ))
 
 
-def seed(settings):
-    if settings.app_env not in {"development", "test"} or not (settings.demo_auth_enabled or settings.hosted_demo_code_hash):
-        raise RuntimeError("Seeding requires development/test mode with demo authentication")
-    # The hosted shared code authenticates as this single patient identity.
-    # Local DEMO_TOKENS map their tokens to a patient identity; seed each of those too.
-    identities = set(settings.demo_tokens.values()) if settings.demo_auth_enabled else set()
-    if settings.hosted_demo_code_hash:
-        identities.add("synthetic-demo-patient")
+def seed(settings, *, presentation_demo=False):
+    # Explicitly allow a hosted presentation seed ONLY with the hashed, fictional
+    # demo code. This is never a general-purpose production data seeder.
+    if settings.app_env == "production":
+        if not (presentation_demo and settings.hosted_demo_code_hash and
+                not settings.demo_auth_enabled):
+            raise RuntimeError("Production seed requires explicit presentation_demo and hosted demo code")
+        identities = {"synthetic-demo-patient"}
+    elif settings.app_env in {"development", "test"} and (settings.demo_auth_enabled or settings.hosted_demo_code_hash):
+        identities = set(settings.demo_tokens.values()) if settings.demo_auth_enabled else set()
+        if settings.hosted_demo_code_hash:
+            identities.add("synthetic-demo-patient")
+    else:
+        raise RuntimeError("Seeding requires explicitly configured fictional demo authentication")
     if not identities:
         raise RuntimeError("No demo patient identities are configured")
 
