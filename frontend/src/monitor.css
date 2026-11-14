@@ -117,3 +117,31 @@
 @media(max-width:900px){.mon-readout{display:none}.mon-trace{min-height:180px}}
 @media(max-width:560px){.mon-steps{grid-template-columns:1fr}.mon-card{padding:22px}}
 @media(prefers-reduced-motion:reduce){.monitor-grid,.ecg-sweep,.ecg-sweep2,.mon-screen *,.welcome-band .heart-orbit svg,.startup svg{animation:none!important}}
+
+/* Contrast fixes for data-heavy existing modules and guest feature directory. */
+.app-shell .stat-card,.app-shell .panel{background:#0d221a;border-color:#25513b;box-shadow:0 4px 18px #00110966}
+.app-shell .stat-value,.app-shell .stat-card-head,.app-shell .panel-title,.app-shell .dose-name strong{color:#eafff2}
+.app-shell .stat-card-head,.app-shell .dose-name span,.app-shell .time-chip{color:#b9ddca}
+.app-shell .stat-icon{background:#15472f;color:#41eb94}
+.app-shell .profile-popover a,.app-shell .profile-popover button{background:#113225;color:#d8f9e5}
+.app-shell .profile-popover a:hover,.app-shell .profile-popover button:hover{background:#22533a}
+.app-shell .feedback.error{background:#43242b;border-color:#82434b;color:#ffc9ce}
+.app-shell .feedback.success{background:#143c2b;border-color:#32754c;color:#c2ffd8}
+.app-shell .time-chip,.app-shell .dose-name strong,.app-shell .dose-name span{color:#d2f4e0}
+.app-shell .chart-wrap .recharts-cartesian-axis-tick-value{fill:#c5dbcb}
+.app-shell .clara-window .clara-toolbar button,.app-shell .clara-window .clara-welcome button{color:#d9fbe6}
+.app-shell .clara-window .clara-heading strong{color:#f1fff6}
+.app-shell .clara-window .clara-history{background:#102c20;border-color:#285239}
+.app-shell .clara-window .clara-history button{color:#d8f5e2}
+.app-shell .clara-window .clara-history button:hover{background:#1d4833}
+.app-shell .clara-window .clara-voice-info{color:#c4decf}
+.app-shell .clara-window .clara-welcome p{color:#bce2cb}
+.feature-hub-guest{background:radial-gradient(ellipse at top,#0c2d20,#04110d);color:#e8fff4}
+.feature-hub-guest .feature-heading h1,.feature-hub-guest .feature-brand{color:#e8fff4}
+.feature-hub-guest .feature-heading h1 span,.feature-hub-guest .feature-tile-icon{color:#39ff9a}
+.feature-hub-guest .feature-heading p,.feature-hub-guest .feature-tile p{color:#b5d5c3}
+.feature-hub-guest .feature-tile{background:#10291e;border:1px solid #245b3e;color:#eafff3}
+.feature-hub-guest .feature-tile h3{color:#eafff3}
+.feature-hub-guest .feature-tile-icon{background:#164632}
+.feature-hub-guest .feature-important,.feature-hub-guest .feature-start{background:#123223;border-color:#326747;color:#d2f3de}
+.feature-hub-guest .feature-important strong,.feature-hub-guest .feature-start strong{color:#edfff4}
