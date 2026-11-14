@@ -1,5 +1,15 @@
 # Deploying UR Chart to Vercel
 
+## Current deployment status (November 14, 2026)
+
+- **Frontend project:** `ur-chart` in the Vercel team `edwincale08-7707s-projects`.
+- **Production URL:** https://ur-chart.vercel.app
+- **Git source:** `Evyn-dev/UR-Chart`, branch `main`, project root `frontend`.
+- **Build:** Vercel production deployment reached `READY`; automatic redeploys from GitHub `main` confirmed.
+- **Access:** Vercel Authentication protection is currently enabled for generated domains. Team members may need Vercel access to view the site.
+- **Frontend CI:** `.github/workflows/frontend-tests.yml` runs tests, type-check, production build, and npm security audits. First run passed 5 tests and the production-dependency audit found 0 vulnerabilities. The full development-dependency audit reported 3 issues involving Vitest/tinypool; review a compatible upgrade rather than forcing a major update.
+- **Backend:** NOT hosted as of this status entry. Login, check-in, medication, alert, and caregiver workflows have **not** been verified online. Do not infer the API works just because the static build succeeded.
+
 This guide prepares the **React + TypeScript frontend** for Vercel hosting. Vercel does **not** automatically host the project's existing Python FastAPI server or persistent SQLite database when importing the `frontend/` directory.
 
 UR Chart is an educational hackathon prototype. Use synthetic patient data only. The current demo-token authentication and risk classification are **not approved for real patients or public clinical use**.
