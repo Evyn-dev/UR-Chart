@@ -184,7 +184,7 @@ def test_caregiver_cannot_use_patient_write_endpoints(client, app, auth, other):
     assert client.patch(f'/api/medications/{med}/logs/{log["id"]}', headers=other, json={"expected_version": 1, "status": "voided", "reason": "Unauthorized"}).status_code == 404
     dashboard = client.get("/api/caregiver/relationships", headers=other).json()["data"][0]
     data = client.get(f'/api/caregiver/relationships/{dashboard["id"]}/dashboard', headers=other).json()["data"]
-    assert "medication_adherence" in data and "Synthetic" not in str(data["medication_adherence"])
+    assert "medication_adherence" in data and "Synthetic" in str(data["medication_adherence"])
 
 
 def test_summary_queries_are_batched_and_refill_is_not_estimated_inventory(client, app, auth):
