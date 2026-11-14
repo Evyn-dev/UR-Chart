@@ -64,8 +64,8 @@ export function ClaraAssistant(){
   utterance.lang=utterance.voice?.lang||'en-US';
   utterance.rate=.94;utterance.pitch=1.04;utterance.volume=1;
   utterance.onstart=()=>setSpeaking(true);
-  utterance.onend=()=>{setSpeaking(false);utteranceRef.current=null};
-  utterance.onerror=()=>{setSpeaking(false);utteranceRef.current=null};
+  utterance.onend=()=>{setSpeaking(false);};
+  utterance.onerror=()=>{setSpeaking(false);};
   
   window.speechSynthesis.speak(utterance);
  }
