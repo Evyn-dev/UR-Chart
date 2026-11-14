@@ -1,8 +1,7 @@
 import {useEffect,useState} from 'react';
-import {Link,useNavigate,useSearchParams} from 'react-router-dom';
-import {AlertTriangle,Bell,CalendarDays,Check,ClipboardList,HeartHandshake,HeartPulse,MapPin,MessageCircle,PhoneCall,Pill,ShieldAlert,UserRound,Printer} from 'lucide-react';
+import {Link,useSearchParams} from 'react-router-dom';
+import {AlertTriangle,CalendarDays,Check,ClipboardList,MapPin,MessageCircle,PhoneCall,Pill,ShieldAlert,Printer} from 'lucide-react';
 import {useSession} from '../hooks/session';
-import {caregiversApi} from '../services/caregivers';
 import {checkinsApi} from '../services/checkins';
 import {medicationsApi} from '../services/medications';
 import type {Checkin,MedicationSummary,Relationship} from '../types/api';
@@ -36,7 +35,7 @@ export function EmergencyConnect(){
  const {value:relationships}=useFetch<Relationship[]>(role==='patient'?'/caregivers':'/caregiver/relationships');
  const [sending,setSending]=useState(false);const [location,setLocation]=useState('');const [locSharing,setLocSharing]=useState(false);
  const [error,setError]=useState('');const [notice,setNotice]=useState('');const [caregiverPhone,setCaregiverPhone]=useState('');
- const [contactName,setContactName]=useState('Caregiver');const [priority,setPriority]=useState(1);
+
  const activate=async()=>{if(sending)return;setSending(true);setError('');setNotice('');
   try{const result=await api<Event>('/engagement/emergencies','POST',{share_location:locSharing,location:locSharing?location:null});
    refreshHistory();setNotice(result.notifications.some(x=>x.sms==='provider_accepted'||x.call==='provider_accepted')?
@@ -149,7 +148,7 @@ export function DailyBriefing(){
 
 export function RecoveryMilestones(){
  const {api}=useSession();const [rows,setRows]=useState<Checkin[]>([]);const [error,setError]=useState('');
- useEffect(()=>{checkinsApi(api).list().then(setRows).catch(e=>setError(errorMsg(e)))},[api]);
+ useEffect(()=>{const end=new Date().toISOString().slice(0,10);const start=new Date(Date.now()-30*86400000).toISOString().slice(0,10);checkinsApi(api).list(start,end).then(setRows).catch(e=>setError(errorMsg(e)))},[api]);
  const ordered=[...rows].sort((a,b)=>(a.day||'').localeCompare(b.day||''));
  const latest=ordered.at(-1);
  return <Page title="Recovery journey" detail="Milestones come from recorded activity and check-ins, not automatic clinical clearance.">
