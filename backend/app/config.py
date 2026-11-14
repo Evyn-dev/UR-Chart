@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     supabase_publishable_key: str = ""
     allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
     demo_auth_enabled: bool = False
+    hosted_demo_code_hash: str = ""
     demo_tokens: dict[str, str] = {}
     ai_provider: Literal["disabled", "approved_instructions"] = "disabled"
     ai_api_key: str = ""
@@ -22,6 +23,8 @@ class Settings(BaseSettings):
     def secure_defaults(self):
         if self.app_env == "production" and self.demo_auth_enabled:
             raise ValueError("Demo authentication is forbidden in production")
+        if self.hosted_demo_code_hash and not re.fullmatch(r"[0-9a-f]{64}", self.hosted_demo_code_hash):
+            raise ValueError("Hosted demo code hash must be SHA-256 hex")
         if any(len(token) < 32 or not user.strip() for token, user in self.demo_tokens.items()):
             raise ValueError("Demo tokens need at least 32 characters and a nonempty identity")
         if self.database_schema and not re.fullmatch(r"[a-z_][a-z0-9_]*", self.database_schema):
