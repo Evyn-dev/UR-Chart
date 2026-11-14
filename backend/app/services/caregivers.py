@@ -102,15 +102,34 @@ def dashboard(db, caregiver, id, limit=20, offset=0):
         if not done_today:
             tasks.append({"type": "checkin", "description": "No check-in recorded today; this is not evidence of a health problem."})
     if "checkin_summary" in permissions:
-        result["checkin_summary"] = {"trends": checkins.trends(db, patient.id, start, today, rows), "recent": [
-            {"day": row.day, "wellbeing": row.wellbeing, "pain_level": row.pain_level, "activity_minutes": row.activity_minutes} for row in rows]}
+        checkin_rows = checkins.history(db, patient.id, start, today, limit=limit, offset=offset)
+        result["checkin_summary"] = {
+            "trends": checkins.trends(db, patient.id, start, today, checkin_rows),
+            "recent": [{
+                "id": row.id, "day": row.day, "wellbeing": row.wellbeing,
+                "pain_level": row.pain_level, "activity_minutes": row.activity_minutes,
+                "activity_type": row.activity_type, "symptoms": row.symptoms,
+                "symptom_reports": row.symptom_reports, "note": row.note,
+            } for row in checkin_rows],
+            "offset": offset, "limit": limit,
+            "has_more": len(checkin_rows) == limit,
+        }
     if "medication_adherence" in permissions:
         summary = summaries.medication_summary(db, patient, start, today, limit, offset)
         fields = ("expected_due", "scheduled_taken", "scheduled_skipped", "confirmed_missed", "unrecorded", "overdue_unrecorded")
-        result["medication_adherence"] = {"start": start, "end": today, "counts": {
-            field: sum(value[field] for value in summary["adherence"].values()) for field in fields},
-            "medications_included": len(summary["medications"]), "has_more": summary["has_more"], "offset": offset,
-            "schedule_issue_count": sum(len(v["schedule_issues"]) for v in summary["adherence"].values())}
+        result["medication_adherence"] = {
+            "start": start, "end": today, "counts": {
+                field: sum(value[field] for value in summary["adherence"].values()) for field in fields},
+            "medications": summary["medications"],
+            "adherence_by_medication": summary["adherence"],
+            "today_doses": summary["today_doses"],
+            "completed_records": summary["completed_records"],
+            "unrecorded_doses": summary["unrecorded_doses"],
+            "refill_warnings": summary["refill_warnings"],
+            "medications_included": len(summary["medications"]),
+            "has_more": summary["has_more"], "offset": offset, "limit": limit,
+            "schedule_issue_count": sum(len(v["schedule_issues"]) for v in summary["adherence"].values()),
+        }
         count = sum(d["due"] for d in summary["unrecorded_doses"])
         if count:
             tasks.append({"type": "dose_record", "count": count, "description": "Scheduled doses have no recorded status. This does not prove they were missed."})
