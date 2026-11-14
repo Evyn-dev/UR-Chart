@@ -1,5 +1,7 @@
 # UR Chart shared backend guide
 
+For medication schedules, scheduled-dose adherence, partial check-ins, trends, and prototype risk alerts, see [Recovery Tracking](backend/RECOVERY_TRACKING.md), which documents the additive contracts after this foundation.
+
 This foundation uses fictional data only. The initial repository contained a README and license; neither was changed. All application code is under `backend/`.
 
 ## 1. Install and configure

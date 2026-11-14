@@ -15,7 +15,7 @@ def test_health_docs_and_schema(client):
     assert client.get("/api/health").json()["data"]["status"] == "ok"
     assert client.get("/docs").status_code == 200
     schema = client.get("/openapi.json").json()
-    assert len(schema["paths"]) == 10
+    assert {"/api/health", "/api/medications", "/api/checkins", "/api/chat/message"} <= schema["paths"].keys()
     assert "HTTPBearer" in schema["components"]["securitySchemes"]
 
 
