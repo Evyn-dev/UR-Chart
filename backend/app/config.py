@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     supabase_publishable_key: str = ""
     allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
     demo_auth_enabled: bool = False
+    presentation_demo_enabled: bool = False
     hosted_demo_code_hash: str = ""
     demo_tokens: dict[str, str] = {}
     ai_provider: Literal["disabled", "approved_instructions", "ollama"] = "disabled"
@@ -22,6 +23,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def secure_defaults(self):
+        if self.presentation_demo_enabled and self.app_env == "production":
+            raise ValueError("One-click demo is not allowed in production; use an isolated demo deployment")
+        if self.presentation_demo_enabled and self.supabase_url:
+            raise ValueError("One-click demo cannot be combined with Supabase authentication")
         if self.app_env == "production" and self.demo_auth_enabled:
             raise ValueError("Demo authentication is forbidden in production")
         if self.hosted_demo_code_hash and not re.fullmatch(r"[0-9a-f]{64}", self.hosted_demo_code_hash):
