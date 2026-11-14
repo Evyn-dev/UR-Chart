@@ -8,15 +8,19 @@ type Recognizer = {
 };
 type SpeechWindow = Window & {SpeechRecognition?:new()=>Recognizer;webkitSpeechRecognition?:new()=>Recognizer};
 
-function say(text:string){
+function say(text:string, onSpeakingChange:(speaking:boolean)=>void){
  if(!('speechSynthesis' in window))return;
  window.speechSynthesis.cancel();
  const utterance=new SpeechSynthesisUtterance(text.slice(0,1500));
- utterance.rate=0.95;window.speechSynthesis.speak(utterance);
+ utterance.rate=0.95;
+ utterance.onstart=()=>onSpeakingChange(true);
+ utterance.onend=()=>onSpeakingChange(false);
+ utterance.onerror=()=>onSpeakingChange(false);
+ window.speechSynthesis.speak(utterance);
 }
 
 /** Voice and emergency UX stay entirely within the existing React assistant view. */
-export function ChartVoice({onQuestion,latestReply}:{onQuestion:(text:string)=>void;latestReply:string}){
+export function ChartVoice({onQuestion,latestReply,onSpeakingChange}:{onQuestion:(text:string)=>void;latestReply:string;onSpeakingChange:(speaking:boolean)=>void}){
  const [enabled,setEnabled]=useState(false);
  const [status,setStatus]=useState('Voice off');
  const [emergency,setEmergency]=useState(false);
@@ -25,13 +29,15 @@ export function ChartVoice({onQuestion,latestReply}:{onQuestion:(text:string)=>v
  const enabledRef=useRef(false);
  const awaiting=useRef(false);
  const callback=useRef(onQuestion);
+ const speakingCallback=useRef(onSpeakingChange);
  callback.current=onQuestion;
- useEffect(()=>{if(latestReply)say(latestReply)},[latestReply]);
- useEffect(()=>()=>{enabledRef.current=false;recognizer.current?.stop();window.speechSynthesis?.cancel()},[]);
+ speakingCallback.current=onSpeakingChange;
+ useEffect(()=>{if(latestReply)say(latestReply, value=>speakingCallback.current(value))},[latestReply]);
+ useEffect(()=>()=>{enabledRef.current=false;recognizer.current?.stop();window.speechSynthesis?.cancel();speakingCallback.current(false)},[]);
  function emergencyMode(){
   setEmergency(true);
   setStatus('Emergency panel opened');
-  say('If this is a real emergency, call local emergency services now. In the United States call 911.');
+  say('If this is a real emergency, call local emergency services now. In the United States call 911.', value=>speakingCallback.current(value));
  }
  function toggle(){
   if(enabledRef.current){
