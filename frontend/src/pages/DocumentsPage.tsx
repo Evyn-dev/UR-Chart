@@ -9,6 +9,7 @@ type DocumentRow={
  patient_id:string;shared_with_caregivers:boolean;uploader_role:string;can_manage:boolean
 };
 const MAX_BYTES=3*1024*1024;
+const extensionMime:Record<string,string>={pdf:'application/pdf',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',txt:'text/plain',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'};
 const mimeTypes=new Set(['application/pdf','image/png','image/jpeg','text/plain','application/vnd.openxmlformats-officedocument.wordprocessingml.document']);
 const labelSize=(size:number)=>size<1024?size+' B':(size/1024/1024).toFixed(2)+' MB';
 
@@ -41,7 +42,7 @@ export function DocumentsPage(){
   const next=e.target.files?.[0]||null;
   setError('');setNotice('');
   if(!next){setFile(null);return}
-  const detected=next.type||({'pdf':'application/pdf','png':'image/png','jpg':'image/jpeg','jpeg':'image/jpeg','txt':'text/plain','docx':'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}[next.name.split('.').pop()?.toLowerCase()||'']||'');
+  const detected=next.type||(extensionMime[next.name.split('.').pop()?.toLowerCase()||'']||'');
   if(!mimeTypes.has(detected)){setError('Upload PDF, DOCX, PNG, JPG, or UTF-8 TXT files only.');setFile(null);return}
   if(next.size>MAX_BYTES){setError('Files must be 3 MB or smaller.');setFile(null);return}
   setFile(next);
