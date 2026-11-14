@@ -61,10 +61,10 @@ function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
     <div className="mon-features"><span><Activity size={16}/> Daily recovery tracking</span><span><ShieldAlert size={16}/> Clear safety guidance</span></div>
    </section>
    <section className="mon-card" aria-label="Enter fictional demo">
-    <h2 style={{margin:'0 0 8px',color:'#eafff3'}}>Explore the demo</h2>
-    <p style={{color:'#bedccb',fontSize:13,marginBottom:18}}>Choose a role. No access code needed when public demo mode is enabled.</p>
+    <h2 style={{margin:'0 0 8px',color:'#17304A'}}>Explore the demo</h2>
+    <p style={{color:'#526C80',fontSize:13,marginBottom:18}}>Choose a role. No access code needed when public demo mode is enabled.</p>
     <button className="btn primary wide" type="button" disabled={working} onClick={()=>{void enterDemo('patient')}}><UserRound size={19}/> {working?'Connecting…':'Enter as Patient'} <ArrowRight size={16}/></button>
-    <button className="btn wide" style={{marginTop:10,background:'#123c29',border:'1px solid #36714b',color:'#eafff3'}} type="button" disabled={working} onClick={()=>{void enterDemo('caregiver')}}><Users size={19}/> Enter as Caregiver <ArrowRight size={16}/></button>
+    <button className="btn wide" style={{marginTop:10,background:'#EAF3FA',border:'1px solid #BFD9E8',color:'#173F61'}} type="button" disabled={working} onClick={()=>{void enterDemo('caregiver')}}><Users size={19}/> Enter as Caregiver <ArrowRight size={16}/></button>
     <p className="entry-foot" style={{marginTop:16}}>Fictional shared data only. Caregivers see patient information only after an invitation is accepted. No real medical monitoring.</p>
     {error&&<div role="alert" className="feedback error">{error}</div>}
     <button type="button" className="mon-link" onClick={()=>setManual(v=>!v)} style={{background:'none',border:0,cursor:'pointer',margin:'12px auto 0',display:'flex'}}>{manual?'Hide code login':'Use an existing demo code instead'}</button>
