@@ -104,3 +104,16 @@ export function OperationOverview(){
   <p className="operation-disclaimer">This is an educational timeline, not an exercise prescription or clearance to advance. Actual rehabilitation differs by procedure, complications and clinician instructions. Your selection is local to this browser session.</p>
  </section>
 }
+
+/** Contextual journaling prompts only; the underlying check-in fields remain unchanged. */
+export function OperationCheckinGuide(){
+ const {selected,currentPhase}=useOperation();
+ if(!selected)return null;
+ const items=(currentPhase?.focus||selected.focus).slice(0,3);
+ return <aside className="operation-checkin-guide" aria-label="Procedure-specific check-in prompts">
+   <strong>{selected.title}: things you may want to record</strong>
+   {currentPhase&&<span className="operation-checkin-stage">{currentPhase.title}</span>}
+   <ul>{items.map(item=><li key={item}>{item}</li>)}</ul>
+   <small>Only record observations you actually experienced. Your care team's plan determines activities and restrictions.</small>
+ </aside>;
+}
