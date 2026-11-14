@@ -12,7 +12,7 @@ USER_ID = "11111111-1111-4111-8111-111111111111"
 
 def settings():
     return Settings(
-        _env_file=None, app_env="production",
+        _env_file=None, app_env="test",
         supabase_url="https://example.supabase.co",
         supabase_publishable_key="test-publishable-key",
         demo_auth_enabled=False,
