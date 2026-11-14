@@ -1,7 +1,8 @@
 export class ApiError extends Error { constructor(message:string,public status:number){super(message);this.name='ApiError'} }
-// During development Vite proxies /api to FastAPI so the browser uses a same-origin URL.
-// A deployed frontend can set VITE_API_BASE_URL to the trusted HTTPS API origin.
-export function createClient(token:string,base=import.meta.env.VITE_API_BASE_URL || '') {
+// Same-origin /api requests work with Vite's local proxy and Vercel's
+// public /api -> backend service rewrite. Service binding URLs are server-only
+// runtime values and must never be embedded in a browser bundle.
+export function createClient(token:string,base='') {
   return async function request<T>(path:string,method='GET',body?:unknown,signal?:AbortSignal):Promise<T> {
     let response:Response;
     try {
