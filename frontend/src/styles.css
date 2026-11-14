@@ -119,3 +119,7 @@
 .clara-emergency button{padding:5px 9px;border:1px solid #e3b0b0;background:white;border-radius:7px;font-size:11px;color:#982f3c}
 @media(max-width:500px){.clara-launcher{right:15px;bottom:15px;padding:14px 17px}.clara-window{right:0;bottom:0;width:100vw;height:min(100dvh,720px);border-radius:19px 19px 0 0}.clara-header{padding:11px 12px}}
 @media(prefers-reduced-motion:reduce){.clara-launcher,.clara-mic.is-listening{animation:none;transition:none}}
+
+/* Keep all scrollable areas usable without displaying scrollbar tracks. */
+html, body, * { scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display: none; width: 0; height: 0; }
