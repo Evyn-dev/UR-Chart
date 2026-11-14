@@ -7,6 +7,7 @@ import {createClient} from './services/client';
 import {patientsApi} from './services/patients';
 import type {Patient} from './types/api';
 import {Shell} from './components/Shell';
+import {EcgTrace,MonitorBackdrop} from './components/MonitorBackdrop';
 import {FeaturesPage} from './pages/FeaturesPage';
 import {Dashboard} from './pages/Dashboard';
 import {MedicationsPage} from './pages/MedicationsPage';
@@ -33,28 +34,35 @@ export function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>voi
   catch(e){setError(e instanceof Error?e.message:'Unable to connect.')}
   finally{setWorking(false)}
  }
- return <div className="entry-screen"><div className="entry-pattern"/><main className="entry-card">
-  <div className="entry-brand"><div className="brand-mark"><HeartPulse size={23}/></div><strong>UR<span>Chart</span></strong></div>
-  <div className="entry-eyebrow"><span className="eyebrow-dot"/> YOUR RECOVERY COMPANION</div>
-  <h1>Your recovery,<br/><em>made clearer.</em></h1>
-  <p>Explore medication tracking, check-ins, progress and caregiver tools in one recovery space.</p>
-  <div className="entry-features"><span><Activity size={16}/> Daily recovery tracking</span><span><ShieldAlert size={16}/> Clear safety guidance</span></div>
-  <form onSubmit={submit} className="entry-form">
-   <label htmlFor="demo-token">{hostedDemo?'Demo access code':'Access token'}</label>
-   <div className="field-with-icon"><KeyRound size={18}/><input id="demo-token" value={token} onChange={e=>setToken(e.target.value)} type="password" autoComplete="off" placeholder={hostedDemo?'Enter your demo code':'Enter your access token'} required/></div>
-   {hostedDemo&&<><label htmlFor="demo-persona" style={{marginTop:12}}>Demo role</label>
-   <select id="demo-persona" value={persona} onChange={e=>setPersona(e.target.value as 'patient'|'caregiver')}>
-     <option value="patient">Patient</option>
-     <option value="caregiver">Caregiver (test sharing)</option>
-   </select></>}
-   {health.error&&<div role="alert" className="feedback error">{health.error} <button type="button" onClick={health.reload}>Retry connection</button></div>}
-   {health.data?.login_mode==='unconfigured'&&<div role="alert" className="feedback error">Sign-in is not configured for this service.</div>}
-   {error&&<div role="alert" className="feedback error">{error}</div>}
-   <button className="btn primary wide" disabled={working||health.loading||!health.data||health.data.login_mode==='unconfigured'} type="submit">{working||health.loading?'Connecting…':'Enter recovery dashboard'}<ArrowRight size={18}/></button>
-  </form>
-  <Link to="/features" className="entry-explore">Explore all features <ArrowRight size={16}/></Link>
-  <p className="entry-foot"><LockKeyhole size={14}/> {hostedDemo?'No email required. Shared fictional patient for demonstration only. Anyone holding the code can access its records.':'Use the token assigned to your fictional demo identity.'} Never enter real health data.</p>
- </main><aside className="entry-aside"><div className="aside-heart"><HeartPulse size={72} strokeWidth={1.3}/></div><span className="eyebrow">ONE DAY AT A TIME</span><h2>Good care should<br/>feel less complicated.</h2><p>Understand what's next. Keep up with your routine. Have your support system close by.</p><div className="aside-stats"><div><b>01</b><span>Check in</span></div><div><b>02</b><span>Stay on track</span></div><div><b>03</b><span>Feel supported</span></div></div></aside></div>
+ return <div className="mon-screen"><MonitorBackdrop/>
+  <header className="mon-nav"><div className="mon-brand"><HeartPulse size={26}/><strong>UR<span>Chart</span></strong></div><Link to="/features" className="mon-link">Explore all features <ArrowRight size={16}/></Link></header>
+  <main className="mon-main">
+   <section className="mon-hero">
+    <div className="mon-eyebrow"><span className="mon-dot"/> YOUR RECOVERY COMPANION</div>
+    <h1>Your recovery,<br/><em>made clearer.</em></h1>
+    <p>Explore medication tracking, check-ins, progress and caregiver tools in one recovery space.</p>
+    <div className="mon-features"><span><Activity size={16}/> Daily recovery tracking</span><span><ShieldAlert size={16}/> Clear safety guidance</span></div>
+   </section>
+   <section className="mon-card" aria-label="Sign in">
+    <form onSubmit={submit} className="entry-form">
+     <label htmlFor="demo-token">{hostedDemo?'Demo access code':'Access token'}</label>
+     <div className="field-with-icon"><KeyRound size={18}/><input id="demo-token" value={token} onChange={e=>setToken(e.target.value)} type="password" autoComplete="off" placeholder={hostedDemo?'Enter your demo code':'Enter your access token'} required/></div>
+     {hostedDemo&&<><label htmlFor="demo-persona" style={{marginTop:12}}>Demo role</label>
+     <select id="demo-persona" value={persona} onChange={e=>setPersona(e.target.value as 'patient'|'caregiver')}>
+       <option value="patient">Patient</option>
+       <option value="caregiver">Caregiver (test sharing)</option>
+     </select></>}
+     {health.error&&<div role="alert" className="feedback error">{health.error} <button type="button" onClick={health.reload}>Retry connection</button></div>}
+     {health.data?.login_mode==='unconfigured'&&<div role="alert" className="feedback error">Sign-in is not configured for this service.</div>}
+     {error&&<div role="alert" className="feedback error">{error}</div>}
+     <button className="btn primary wide" disabled={working||health.loading||!health.data||health.data.login_mode==='unconfigured'} type="submit">{working||health.loading?'Connecting…':'Enter recovery dashboard'}<ArrowRight size={18}/></button>
+    </form>
+    <p className="entry-foot"><LockKeyhole size={14}/> {hostedDemo?'No email required. Shared fictional patient for demonstration only. Anyone holding the code can access its records.':'Use the token assigned to your fictional demo identity.'} Never enter real health data.</p>
+   </section>
+  </main>
+  <div className="mon-trace"><EcgTrace/><div className="mon-readout"><HeartPulse size={34}/><b>72</b><span>BPM · SAMPLE DISPLAY</span></div></div>
+  <footer className="mon-steps"><div><b>01</b><span>Check in</span></div><div><b>02</b><span>Stay on track</span></div><div><b>03</b><span>Feel supported</span></div></footer>
+ </div>
 }
 export default function App(){
   const {pathname}=useLocation();
