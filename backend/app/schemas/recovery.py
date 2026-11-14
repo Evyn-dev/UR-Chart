@@ -12,6 +12,7 @@ class Dose(BaseModel):
     local_time: str
     timezone: str
     status: Literal["taken", "skipped", "missed", "unrecorded"]
+    overdue: bool
     due: bool
     log_id: UUID | None
 
@@ -36,6 +37,11 @@ class ScheduleOut(RecordOut):
 
 
 class TrendSummary(BaseModel):
+    expected_days: int = 0
+    missing_days: int = 0
+    consistency_percent: float | None = None
+    latest_comparison: dict = {}
+
     days_recorded: int
     metric_counts: dict[str, int]
     averages: dict[str, float | None]

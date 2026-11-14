@@ -1,7 +1,9 @@
 from uuid import UUID
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
-from app.services import medications as service
+from app.services import medications as service, summaries
+from sqlalchemy import update as sql_update
+from app.schemas.support import MedicationSummary
 from app.models import MedicationSchedule
 from app.schemas.recovery import DoseHistory, ScheduleOut
 from fastapi import APIRouter, Depends, Query
@@ -32,6 +34,8 @@ def create(body: MedicationCreate, patient=Depends(current_patient), db=Depends(
 @router.patch("/{id}", response_model=Data[MedicationOut])
 def update(id: UUID, body: MedicationPatch, patient=Depends(current_patient), db=Depends(get_db)):
     record = owned(db, Medication, id, patient.id)
+    if "supply_remaining" in body.model_fields_set:
+        db.execute(sql_update(Medication).where(Medication.id == record.id).values(inventory_revision=Medication.inventory_revision + 1))
     for key, value in body.model_dump(exclude_unset=True, mode="json").items():
         setattr(record, key, value)
     if {"reminder_times", "active"} & body.model_fields_set:
@@ -63,8 +67,7 @@ def adherence(id: UUID, start: date | None = None, end: date | None = None, pati
 @router.get("/{id}/refill", response_model=Data[RefillStatus])
 def refill(id: UUID, patient=Depends(current_patient), db=Depends(get_db)):
     medication = owned(db, Medication, id, patient.id)
-    needed = (medication.supply_remaining <= medication.refill_threshold if medication.supply_remaining is not None and medication.refill_threshold is not None else None)
-    return {"data": {"medication_id": medication.id, "supply_remaining": medication.supply_remaining, "refill_threshold": medication.refill_threshold, "refill_needed": needed}}
+    return {"data": summaries.refill(db, medication)}
 
 
 @router.get("/{id}/doses", response_model=Data[DoseHistory])
@@ -74,6 +77,11 @@ def doses(id: UUID, start: date, end: date, patient=Depends(current_patient), db
 
 
 @router.get("/{id}/schedules", response_model=Data[list[ScheduleOut]])
-def schedules(id: UUID, patient=Depends(current_patient), db=Depends(get_db)):
+def schedules(id: UUID, limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0), patient=Depends(current_patient), db=Depends(get_db)):
     medication = owned(db, Medication, id, patient.id)
-    return {"data": db.scalars(select(MedicationSchedule).where(MedicationSchedule.medication_id == medication.id).order_by(MedicationSchedule.effective_from)).all()}
+    return {"data": db.scalars(select(MedicationSchedule).where(MedicationSchedule.medication_id == medication.id).order_by(MedicationSchedule.effective_from, MedicationSchedule.id).offset(offset).limit(limit)).all()}
+
+
+@router.get("/summary", response_model=Data[MedicationSummary])
+def summary(start: date | None = None, end: date | None = None, limit: int = Query(20, ge=1, le=50), offset: int = Query(0, ge=0), patient=Depends(current_patient), db=Depends(get_db)):
+    return {"data": summaries.medication_summary(db, patient, start, end, limit, offset)}

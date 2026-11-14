@@ -135,6 +135,7 @@ class LogCreate(Input):
 
 
 class LogOut(RecordOut):
+    version: int
     medication_id: UUID
     status: str
     recorded_at: datetime
@@ -185,6 +186,7 @@ class CheckinCreate(Input):
 
 
 class CheckinOut(RecordOut):
+    version: int
     day: date
     wellbeing: int | None
     note: str | None
@@ -201,6 +203,18 @@ class AlertCreate(Input):
 
 
 class AlertOut(RecordOut):
+    version: int
+    checkin_version: int
+    acknowledged_by: str | None
+    acknowledged_at: datetime | None
+    resolved_by: str | None
+    resolved_at: datetime | None
+
+    @field_validator("acknowledged_at", "resolved_at")
+    @classmethod
+    def lifecycle_utc(cls, value):
+        return (value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)) if value else None
+
     severity: Literal["routine", "needs_clinical_review", "urgent", "emergency"]
     checkin_id: UUID | None
     rule_id: str | None
@@ -242,6 +256,7 @@ class MedicationAdherence(BaseModel):
     skipped: int
     total_logged: int
     adherence_percent: float | None
+    overdue_unrecorded: int
     expected_due: int
     scheduled_taken: int
     scheduled_skipped: int
@@ -253,6 +268,12 @@ class MedicationAdherence(BaseModel):
 
 
 class RefillStatus(BaseModel):
+    actual_supply: int | None = None
+    estimated_supply: int | None = None
+    estimated_days_remaining: float | None = None
+    status: str = "unknown"
+    message: str = "Supply information unavailable"
+
     medication_id: UUID
     supply_remaining: int | None
     refill_threshold: int | None

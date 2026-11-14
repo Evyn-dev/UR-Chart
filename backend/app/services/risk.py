@@ -78,11 +78,11 @@ def match(db, checkin, rule):
 
 
 def persist_alert(db, checkin, rule_id, version, severity, guidance, evidence, prototype=True):
-    existing = db.scalar(select(Alert).where(Alert.checkin_id == checkin.id, Alert.rule_id == rule_id, Alert.rule_version == version))
+    existing = db.scalar(select(Alert).where(Alert.checkin_id == checkin.id, Alert.rule_id == rule_id, Alert.rule_version == version, Alert.checkin_version == checkin.version))
     if existing:
         return existing
     alert = Alert(patient_id=checkin.patient_id, checkin_id=checkin.id, category="recovery_safety",
-        rule_id=rule_id, rule_version=version, severity=severity, prototype_only=prototype,
+        rule_id=rule_id, rule_version=version, checkin_version=checkin.version, severity=severity, prototype_only=prototype,
         message=("PROTOTYPE ONLY — not clinically validated. " if prototype else "") + guidance,
         evidence=evidence, notification_status="not_sent")
     try:
@@ -90,7 +90,7 @@ def persist_alert(db, checkin, rule_id, version, severity, guidance, evidence, p
             db.add(alert)
             db.flush()
     except IntegrityError:
-        return db.scalar(select(Alert).where(Alert.checkin_id == checkin.id, Alert.rule_id == rule_id, Alert.rule_version == version))
+        return db.scalar(select(Alert).where(Alert.checkin_id == checkin.id, Alert.rule_id == rule_id, Alert.rule_version == version, Alert.checkin_version == checkin.version))
     return alert
 
 
@@ -101,10 +101,10 @@ def evaluate(db, checkin, settings):
         fingerprint = hashlib.sha256(json.dumps(snapshot, sort_keys=True).encode()).hexdigest()
     except (OSError, ValueError):
         ruleset, snapshot, fingerprint = None, {}, "unavailable"
-    existing = db.scalar(select(RiskEvaluation).where(RiskEvaluation.checkin_id == checkin.id, RiskEvaluation.ruleset_hash == fingerprint))
+    existing = db.scalar(select(RiskEvaluation).where(RiskEvaluation.checkin_id == checkin.id, RiskEvaluation.ruleset_hash == fingerprint, RiskEvaluation.checkin_version == checkin.version))
     if existing:
         return existing
-    details = {"ruleset": snapshot, "matched_rules": [], "guidance": FALLBACK_GUIDANCE, "prototype_only": True}
+    details = {"checkin_version": checkin.version, "ruleset": snapshot, "matched_rules": [], "guidance": FALLBACK_GUIDANCE, "prototype_only": True}
     status = "unavailable" if ruleset is None else "evaluated"
     if ruleset is None or not ruleset.rules:
         status = "unavailable"
@@ -128,13 +128,13 @@ def evaluate(db, checkin, settings):
         if checkin.symptoms or checkin.note or unassessed:
             persist_alert(db, checkin, "unassessed_observations", "1", "needs_clinical_review", FALLBACK_GUIDANCE,
                 {"unmatched_codes": unassessed, "free_text_present": bool(checkin.symptoms or checkin.note)})
-    evaluation = RiskEvaluation(checkin_id=checkin.id, ruleset_hash=fingerprint, status=status, details=details)
+    evaluation = RiskEvaluation(checkin_id=checkin.id, checkin_version=checkin.version, ruleset_hash=fingerprint, status=status, details=details)
     try:
         with db.begin_nested():
             db.add(evaluation)
             db.flush()
     except IntegrityError:
-        evaluation = db.scalar(select(RiskEvaluation).where(RiskEvaluation.checkin_id == checkin.id, RiskEvaluation.ruleset_hash == fingerprint))
+        evaluation = db.scalar(select(RiskEvaluation).where(RiskEvaluation.checkin_id == checkin.id, RiskEvaluation.ruleset_hash == fingerprint, RiskEvaluation.checkin_version == checkin.version))
     return evaluation
 
 

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone, date
 from uuid import uuid4
-from sqlalchemy import ForeignKey, String, Text, UniqueConstraint, DateTime, JSON
+from sqlalchemy import ForeignKey, String, Text, UniqueConstraint, DateTime, JSON, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
@@ -39,6 +39,7 @@ class RecoveryPlan(PatientRecord, Base):
 
 class Medication(PatientRecord, Base):
     __tablename__ = "medications"
+    __table_args__ = (Index("ix_medication_patient_active_created", "patient_id", "active", "created_at", "id"),)
     name: Mapped[str] = mapped_column(String(200))
     dosage: Mapped[str] = mapped_column(String(200))
     schedule: Mapped[str] = mapped_column(String(300))
@@ -46,13 +47,14 @@ class Medication(PatientRecord, Base):
     reminder_times: Mapped[list] = mapped_column(JSON, default=list)
     supply_remaining: Mapped[int | None] = mapped_column(nullable=True)
     refill_threshold: Mapped[int | None] = mapped_column(nullable=True)
+    inventory_revision: Mapped[int] = mapped_column(default=1)
     patient: Mapped[Patient] = relationship(back_populates="medications")
     logs: Mapped[list["MedicationLog"]] = relationship(back_populates="medication")
 
 
 class MedicationLog(Record, Base):
     __tablename__ = "medication_logs"
-    __table_args__ = (UniqueConstraint("medication_id", "scheduled_for", name="uq_medication_scheduled_dose"),)
+    __table_args__ = (UniqueConstraint("medication_id", "scheduled_for", name="uq_medication_scheduled_dose"), Index("ix_log_medication_recorded", "medication_id", "recorded_at", "id"))
     medication_id: Mapped[str] = mapped_column(ForeignKey("medications.id"), index=True)
     status: Mapped[str] = mapped_column(String(20))
     recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -60,6 +62,8 @@ class MedicationLog(Record, Base):
     schedule_id: Mapped[str | None] = mapped_column(ForeignKey("medication_schedules.id"))
     scheduled_for: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     units_used: Mapped[int | None]
+    version: Mapped[int] = mapped_column(default=1)
+    inventory_revision: Mapped[int] = mapped_column(default=1)
     medication: Mapped[Medication] = relationship(back_populates="logs")
 
 
@@ -67,6 +71,7 @@ class Checkin(PatientRecord, Base):
     __tablename__ = "checkins"
     __table_args__ = (UniqueConstraint("patient_id", "day", name="uq_checkin_patient_day"),)
     day: Mapped[date]
+    version: Mapped[int] = mapped_column(default=1)
     wellbeing: Mapped[int | None]
     note: Mapped[str | None] = mapped_column(String(2000))
     pain_level: Mapped[int | None] = mapped_column(nullable=True)
@@ -93,7 +98,7 @@ class Message(Record, Base):
 
 class Alert(PatientRecord, Base):
     __tablename__ = "alerts"
-    __table_args__ = (UniqueConstraint("checkin_id", "rule_id", "rule_version", name="uq_alert_checkin_rule"),)
+    __table_args__ = (UniqueConstraint("checkin_id", "rule_id", "rule_version", "checkin_version", name="uq_alert_checkin_rule_revision"), Index("ix_alert_patient_created", "patient_id", "created_at", "id"))
     category: Mapped[str] = mapped_column(String(100))
     message: Mapped[str] = mapped_column(String(2000))
     status: Mapped[str] = mapped_column(String(20), default="open")
@@ -104,6 +109,12 @@ class Alert(PatientRecord, Base):
     prototype_only: Mapped[bool] = mapped_column(default=True)
     evidence: Mapped[dict] = mapped_column(JSON, default=dict)
     notification_status: Mapped[str] = mapped_column(String(30), default="not_sent")
+    checkin_version: Mapped[int] = mapped_column(default=1)
+    version: Mapped[int] = mapped_column(default=1)
+    acknowledged_by: Mapped[str | None] = mapped_column(String(255))
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    resolved_by: Mapped[str | None] = mapped_column(String(255))
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class CareTeamConnection(PatientRecord, Base):
@@ -116,6 +127,7 @@ class CareTeamConnection(PatientRecord, Base):
 class MedicationSchedule(Record, Base):
     """Immutable daily schedule snapshots; edits only close the effective interval."""
     __tablename__ = "medication_schedules"
+    __table_args__ = (Index("ix_schedule_medication_effective", "medication_id", "effective_from"),)
     medication_id: Mapped[str] = mapped_column(ForeignKey("medications.id"), index=True)
     timezone: Mapped[str] = mapped_column(String(100))
     reminder_times: Mapped[list] = mapped_column(JSON)
@@ -125,8 +137,12 @@ class MedicationSchedule(Record, Base):
 
 class RiskEvaluation(Record, Base):
     __tablename__ = "risk_evaluations"
-    __table_args__ = (UniqueConstraint("checkin_id", "ruleset_hash", name="uq_checkin_ruleset"),)
+    __table_args__ = (UniqueConstraint("checkin_id", "ruleset_hash", "checkin_version", name="uq_checkin_ruleset_revision"),)
     checkin_id: Mapped[str] = mapped_column(ForeignKey("checkins.id"), index=True)
+    checkin_version: Mapped[int] = mapped_column(default=1)
     ruleset_hash: Mapped[str] = mapped_column(String(64))
     status: Mapped[str] = mapped_column(String(30))
     details: Mapped[dict] = mapped_column(JSON)
+
+
+from app.models.support import RecoveryAudit, CaregiverRelationship, CaregiverAudit
