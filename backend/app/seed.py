@@ -3,13 +3,14 @@
 Use python -m app.seed after migrations. Never seed production or real patients.
 All logins mapped to the same demo identity see the same database records.
 """
-from datetime import date, timedelta
+from datetime import datetime, timedelta, timezone, time
+from zoneinfo import ZoneInfo
 from sqlalchemy import select
 
 from app.config import Settings
 from app.database import make_engine, session_factory
-from app.models import Patient, RecoveryPlan, Medication, Checkin
-from app.services.medications import replace_schedule
+from app.models import Patient, RecoveryPlan, Medication, MedicationLog, MedicationSchedule, Checkin, Alert
+from app.services.medications import replace_schedule, occurrences, utc
 
 PLACEHOLDER_PLAN = "This is fictional demonstration content. Your care team provides your recovery instructions."
 PLAN_TITLE = "Fictional demo plan"
@@ -32,12 +33,99 @@ DEMO_MEDICATIONS = (
     {"name": "Atorvastatin (fictional demo entry)", "dosage": "40 mg — sample entry, not a prescription", "schedule": "Once daily at 21:00 (fictional discharge list)", "reminder_times": ["21:00"]},
 )
 DEMO_CHECKINS = (
+    {"wellbeing": 2, "pain_level": 5, "activity_minutes": 5, "activity_type": "slow walking", "symptoms": ["mild fatigue"], "note": "FICTIONAL: Recovering at home, took a short indoor walk and rested. No new alarming symptoms."},
+    {"wellbeing": 3, "pain_level": 4, "activity_minutes": 7, "activity_type": "gentle walking", "symptoms": ["mild fatigue"], "note": "FICTIONAL: Felt tired after a short walk, used rest breaks and logged medications."},
     {"wellbeing": 3, "pain_level": 4, "activity_minutes": 8, "activity_type": "gentle walking", "symptoms": ["fatigue"], "note": "FICTIONAL: Tired after a short walk; rested afterward."},
     {"wellbeing": 4, "pain_level": 3, "activity_minutes": 10, "activity_type": "gentle walking", "symptoms": ["fatigue"], "note": "FICTIONAL: Energy slightly improved; tracking regular rest breaks."},
     {"wellbeing": 4, "pain_level": 3, "activity_minutes": 12, "activity_type": "gentle walking", "symptoms": [], "note": "FICTIONAL: Completed a short walk without new symptoms."},
     {"wellbeing": 5, "pain_level": 2, "activity_minutes": 12, "activity_type": "gentle walking", "symptoms": [], "note": "FICTIONAL: Slept better and remembered to record symptoms."},
     {"wellbeing": 5, "pain_level": 2, "activity_minutes": 15, "activity_type": "gentle walking", "symptoms": [], "note": "FICTIONAL: Preparing questions for the example follow-up visit."},
 )
+WEEK_PLAN_TITLE = "Fictional week-long progress and follow-up (demo)"
+WEEK_PLAN = """FICTIONAL TRAINING DATA ONLY. This is a seven-day sample record, not medical instructions from a real care team.
+Jordan Ellis's demo recovery week includes daily symptom, pain, energy and activity check-ins; a sample medication schedule and dose log; and a simulated safety-center follow-up notice.
+The fictional caregiver at home can be invited via Caregiver access, but sharing is NOT automatic. A caregiver must accept a patient-issued invitation before viewing selected summaries.
+Example follow-up: patient plans to discuss sleep, fatigue, comfortable walking, surgical-site care, and medicine questions at a fictional 2026-11-20 visit. There is no real appointment scheduling feature connected to the demo.
+Example care-team messaging is not connected; any appointment date or communication mentioned here is part of the fictional narrative only.
+No live medical monitoring, automatic outreach, or clinician review occurs. If real symptoms are concerning, follow the person's actual discharge paperwork and contact their care team. For life-threatening symptoms call emergency services (911 in the USA).
+Everything in this entry is synthetic; do not use it to make real treatment decisions."""
+
+
+def backfill_schedule(db, medication, patient, first_day):
+    """Add only the missing historical interval for this explicitly seeded medication."""
+    schedules = db.scalars(select(MedicationSchedule).where(
+        MedicationSchedule.medication_id == medication.id
+    ).order_by(MedicationSchedule.effective_from)).all()
+    start = datetime.combine(first_day, time.min, ZoneInfo(patient.timezone)).astimezone(timezone.utc)
+    if not schedules:
+        # Normally created by replace_schedule, but handle a partially seeded demo.
+        replace_schedule(db, medication, patient.timezone)
+        schedules = db.scalars(select(MedicationSchedule).where(
+            MedicationSchedule.medication_id == medication.id
+        ).order_by(MedicationSchedule.effective_from)).all()
+    earliest = schedules[0]
+    if utc(earliest.effective_from) > start:
+        db.add(MedicationSchedule(
+            medication_id=medication.id, timezone=patient.timezone,
+            reminder_times=list(medication.reminder_times),
+            effective_from=start, effective_until=utc(earliest.effective_from),
+        ))
+        db.flush()
+    return db.scalars(select(MedicationSchedule).where(
+        MedicationSchedule.medication_id == medication.id
+    )).all()
+
+
+def seed_dose_history(db, medication, patient, first_day, today, current_time):
+    # Check-in and dose data are synthetic. Do not edit existing logs, supply, or schedules.
+    schedules = backfill_schedule(db, medication, patient, first_day)
+    prior = set(db.scalars(select(MedicationLog.scheduled_for).where(
+        MedicationLog.medication_id == medication.id,
+        MedicationLog.scheduled_for.is_not(None),
+    )).all())
+    prior = {utc(t) for t in prior}
+    for schedule in schedules:
+        for item in occurrences(schedule, first_day, today):
+            if "issue" in item:
+                continue
+            due = item["scheduled_for"]
+            if due in prior or due > current_time:
+                continue
+            day_index = (item["local_day"] - first_day).days
+            # Show realistic variation without implying an unrecorded dose was missed.
+            # Every scheduled occurrence before now gets an explicit fictional status.
+            if day_index == 1 and item["local_time"] == "21:00" and medication.name.startswith("Metoprolol"):
+                status = "skipped"
+            elif day_index == 3 and item["local_time"] == "09:00" and medication.name.startswith("Aspirin"):
+                status = "missed"
+            else:
+                status = "taken"
+            recorded = min(due + timedelta(minutes=12), current_time)
+            db.add(MedicationLog(
+                medication_id=medication.id,
+                status=status, scheduled_for=due, schedule_id=item["schedule_id"],
+                recorded_at=recorded, units_used=None,
+                note="FICTIONAL demo dose record; never interpret as evidence of actual adherence.",
+                inventory_revision=medication.inventory_revision,
+            ))
+            prior.add(due)
+
+
+def seed_sample_alert(db, patient, day):
+    """One visibly non-clinical safety-center example, not an emergency trigger."""
+    rule_id = "synthetic-demo-followup-week"
+    existing = db.scalar(select(Alert).where(
+        Alert.patient_id == patient.id, Alert.rule_id == rule_id
+    ))
+    if existing is None:
+        db.add(Alert(
+            patient_id=patient.id, category="recovery_safety",
+            severity="needs_clinical_review", status="open", prototype_only=True,
+            rule_id=rule_id, rule_version="1",
+            message="FICTIONAL DEMO ONLY: Review the patient's recorded fatigue and questions at the sample follow-up. This is not a clinical assessment or a real notification.",
+            evidence={"source":"synthetic_seed","sample_day":day.isoformat()},
+            notification_status="not_sent",
+        ))
 
 
 def seed(settings):
@@ -72,6 +160,16 @@ def seed(settings):
                 elif plan.approved_instructions == PLACEHOLDER_PLAN:
                     # Upgrade only the original seed's placeholder, never a customized plan.
                     plan.approved_instructions = DEMO_HISTORY
+                week_plan = db.scalar(select(RecoveryPlan).where(
+                    RecoveryPlan.patient_id == patient.id, RecoveryPlan.title == WEEK_PLAN_TITLE
+                ))
+                if week_plan is None:
+                    db.add(RecoveryPlan(patient_id=patient.id, title=WEEK_PLAN_TITLE,
+                        approved_by="synthetic-demo-author", approved_instructions=WEEK_PLAN))
+                now_local = datetime.now(ZoneInfo(patient.timezone))
+                today = now_local.date()
+                first_day = today - timedelta(days=6)
+                current_time = datetime.now(timezone.utc)
 
                 for entry in DEMO_MEDICATIONS:
                     exists = db.scalar(select(Medication).where(
@@ -87,11 +185,15 @@ def seed(settings):
                         db.add(med)
                         db.flush()
                         replace_schedule(db, med, patient.timezone)
+                    else:
+                        med = exists
+                    # Backfill the last week of dose events, including existing demo medications.
+                    if med.active and med.reminder_times:
+                        seed_dose_history(db, med, patient, first_day, today, current_time)
 
-                # Add sample check-ins over the five days ending today.
-                # Skip days already entered by the user instead of overwriting them.
+                # Fill seven days ending today, without overwriting user-entered check-ins.
                 for offset, entry in enumerate(DEMO_CHECKINS):
-                    day = date.today() - timedelta(days=4 - offset)
+                    day = first_day + timedelta(days=offset)
                     exists = db.scalar(select(Checkin).where(
                         Checkin.patient_id == patient.id, Checkin.day == day
                     ))
@@ -102,6 +204,7 @@ def seed(settings):
                             activity_minutes=entry["activity_minutes"], activity_type=entry["activity_type"],
                             symptoms=entry["symptoms"], symptom_reports=[], note=entry["note"],
                         ))
+                seed_sample_alert(db, patient, today)
             db.commit()
     finally:
         engine.dispose()
@@ -109,4 +212,4 @@ def seed(settings):
 
 if __name__ == "__main__":
     seed(Settings())
-    print("Shared fictional demo patients, sample medications, check-ins, and recovery history are ready.")
+    print("Shared fictional demo patients: seven days of check-ins and medication logs, recovery plans and sample alert ready.")
