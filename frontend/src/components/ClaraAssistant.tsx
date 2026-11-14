@@ -6,6 +6,7 @@ import {useSession} from '../hooks/session';
 import {chatApi} from '../services/chat';
 import type {Message} from '../types/api';
 import {AssistantStatus} from './AssistantStatus';
+import {useOperation} from './OperationTemplates';
 
 type SpeechResult={resultIndex:number;results:ArrayLike<ArrayLike<{transcript:string}>>};
 type Recognizer={continuous:boolean;interimResults:boolean;lang:string;onresult:((e:SpeechResult)=>void)|null;onerror:((e:{error:string})=>void)|null;onend:(()=>void)|null;start:()=>void;stop:()=>void};
@@ -22,6 +23,7 @@ function errorText(error:unknown){return error instanceof Error?error.message:'U
 
 export function ClaraAssistant(){
  const {api}=useSession();
+ const {selected,currentPhase,daysSince}=useOperation();
  const {pathname}=useLocation();
  const [open,setOpen]=useState(false);
  const [messages,setMessages]=useState<Message[]>([]);
@@ -127,7 +129,9 @@ export function ClaraAssistant(){
   const optimisticId='local-'+Date.now().toString();
   setMessages(previous=>[...previous,{id:optimisticId,role:'user',content:message,created_at:new Date().toISOString(),updated_at:new Date().toISOString()}]);
   try{
-   const reply=await chatApi(api).send(message,conversationRef.current||undefined);
+   // Explicitly label the browser-selected example as nonclinical, so Clara can distinguish it from verified records.
+   const context=selected?`[Unverified demo UI selection: ${selected.title}; ${currentPhase?`example stage: ${currentPhase.title}`:'no timeline stage selected'}; ${daysSince===null?'surgery date not provided':`day ${daysSince+1} after example surgery date`}. This is not a verified patient record or a clinical instruction. For procedure-specific educational questions, discuss relevant general rehab stages only, and prioritize approved discharge instructions. Do not prescribe exercise intensity, medication changes or clinical clearance.]\n`:'';
+   const reply=await chatApi(api).send(context+message,conversationRef.current||undefined);
    conversationRef.current=reply.conversation_id;setConversation(reply.conversation_id);
    setMessages(previous=>[...previous.filter(item=>item.id!==optimisticId),reply.user_message,reply.assistant_message]);
    chatApi(api).list().then(items=>setHistory(items)).catch(()=>{/* history optional */});
@@ -222,7 +226,7 @@ export function ClaraAssistant(){
    {open&&<section className="clara-window" role="dialog" aria-label="Clara recovery assistant">
      <header className="clara-header">
        <span className="clara-mark"><HeartPulse size={23}/></span>
-       <div className="clara-heading"><strong>Clara</strong><span>Your recovery companion · demo</span></div>
+       <div className="clara-heading"><strong>Clara</strong><span>{selected?selected.title+' · demo':'Your recovery companion · demo'}</span></div>
        <button type="button" aria-label={muted?'Unmute Clara voice':'Mute Clara voice'} title={muted?'Unmute voice':'Mute voice'} className="clara-icon-btn" onClick={toggleMute}>{muted?<VolumeX size={19}/>:<Volume2 size={19}/>}</button>
        <button type="button" aria-label="Minimize Clara" title="Minimize" className="clara-icon-btn" onClick={()=>{stopMic();setOpen(false)}}><ChevronDown size={20}/></button>
        <button type="button" aria-label="Close Clara" title="Close" className="clara-icon-btn" onClick={()=>{stopMic();setOpen(false)}}><X size={20}/></button>
@@ -241,7 +245,7 @@ export function ClaraAssistant(){
        <button type="button" onClick={()=>setEmergency(false)}>Dismiss</button>
      </div>}
      <div className="clara-chat-scroll" aria-live="polite">
-       {messages.length===0&&<div className="clara-welcome"><span className="clara-welcome-icon"><HeartPulse size={28}/></span><h3>Hi, I'm Clara.</h3><p>Ask me about general recovery information or records saved in UR Chart. I'm a fictional-data educational assistant, not a clinician.</p><button type="button" onClick={()=>{setDraft('What should I ask my care team about recovery?');input.current?.focus()}}>Help me prepare questions</button></div>}
+       {messages.length===0&&<div className="clara-welcome"><span className="clara-welcome-icon"><HeartPulse size={28}/></span><h3>Hi, I'm Clara.</h3><p>Ask me about general recovery information or records saved in UR Chart. Procedure selection can provide educational context, but it is not a verified medical record.</p><button type="button" onClick={()=>{setDraft('What should I ask my care team about recovery?');input.current?.focus()}}>Help me prepare questions</button></div>}
        {messages.map(item=><div key={item.id} className={'clara-message '+(item.role==='user'?'clara-user':'clara-reply')}><span>{item.role==='user'?'You':'Clara'}</span><p>{item.content}</p></div>)}
        <AssistantStatus thinking={busy} speaking={speaking}/>
        <div ref={transcriptEnd}/>
