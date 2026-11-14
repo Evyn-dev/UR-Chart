@@ -162,7 +162,8 @@ def test_seed_is_idempotent(app, client, auth):
     seed(app.state.settings)
     with app.state.sessions() as db:
         assert len(db.scalars(select(Patient)).all()) == 2
-        assert len(db.scalars(select(RecoveryPlan)).all()) == 2
+        # The existing seed supplies a general plan and a weekly plan per demo patient.
+        assert len(db.scalars(select(RecoveryPlan)).all()) == 4
     assert client.get("/api/patients/me", headers=auth).status_code == 200
     with pytest.raises(RuntimeError):
         seed(Settings(_env_file=None, app_env="production"))

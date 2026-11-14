@@ -9,7 +9,7 @@ from sqlalchemy import select
 
 from app.config import Settings
 from app.database import make_engine, session_factory
-from app.models import Patient, RecoveryPlan, Medication, MedicationLog, MedicationSchedule, Checkin, Alert
+from app.models import Patient, RecoveryPlan, Medication, MedicationLog, MedicationSchedule, Checkin, Alert, CurriculumTask, CaregiverRelationship
 from app.services.medications import replace_schedule, occurrences, utc
 
 PLACEHOLDER_PLAN = "This is fictional demonstration content. Your care team provides your recovery instructions."
@@ -205,6 +205,38 @@ def seed(settings):
                             symptoms=entry["symptoms"], symptom_reports=[], note=entry["note"],
                         ))
                 seed_sample_alert(db, patient, today)
+                # Fictional caregiver relationship for the demo only; never overwrite consent.
+                demo_caregiver = "synthetic-demo-caregiver"
+                if identity != demo_caregiver and (settings.hosted_demo_code_hash or settings.demo_auth_enabled):
+                    rel = db.scalar(select(CaregiverRelationship).where(
+                        CaregiverRelationship.patient_id == patient.id,
+                        CaregiverRelationship.caregiver_user_id == demo_caregiver,
+                    ))
+                    if rel is None:
+                        db.add(CaregiverRelationship(
+                            patient_id=patient.id, caregiver_user_id=demo_caregiver,
+                            status="active",
+                            permissions=["recovery_summary", "checkin_summary", "medication_adherence", "alerts"],
+                            alert_severities=["routine", "needs_clinical_review", "urgent", "emergency"],
+                            responded_at=current_time,
+                        ))
+                # Nonclinical sample tasks. Existing edits remain untouched on reseeding.
+                demo_tasks = [
+                    ("Record today's recovery check-in", "Log pain, energy, and activity as actually observed.", 0),
+                    ("Review follow-up questions", "Prepare questions about fatigue, sleep, and activity limits for the care team.", 1),
+                    ("Review discharge instructions", "Read the fictional written instructions; do not independently change restrictions.", 2),
+                ]
+                for title, description, position in demo_tasks:
+                    existing_task = db.scalar(select(CurriculumTask).where(
+                        CurriculumTask.patient_id == patient.id,
+                        CurriculumTask.title == title,
+                    ))
+                    if existing_task is None:
+                        db.add(CurriculumTask(
+                            patient_id=patient.id, title=title, description=description,
+                            due_day=today + timedelta(days=position), position=position,
+                            status="pending",
+                        ))
             db.commit()
     finally:
         engine.dispose()

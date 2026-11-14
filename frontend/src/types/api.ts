@@ -20,3 +20,6 @@ export interface ChatReply { conversation_id:string; user_message:Message; assis
 export type Permission='recovery_summary'|'medication_adherence'|'checkin_summary'|'alerts';
 export interface Relationship extends RecordBase { patient_id:string; caregiver_user_id:string; status:string; permissions:Permission[]; alert_severities:Severity[]; version:number }
 export interface SharedDashboard { relationship_id:string; patient_display_name:string; permissions:Permission[]; recovery_summary?:Record<string,unknown>; medication_adherence?:Record<string,unknown>; checkin_summary?:Record<string,unknown>; alerts?:{id:string;severity:Severity;status:string;prototype_only:boolean;guidance:string;notification_status:string}[]; outstanding_tasks?:{type:string;description:string;count?:number}[]; alerts_has_more:boolean; notification_status:string }
+
+export interface CurriculumTask extends RecordBase {patient_id:string;title:string;description:string;due_day:string|null;position:number;status:'pending'|'completed'|'archived';version:number}
+export interface CurriculumAudit extends RecordBase {task_id:string;actor_user_id:string;action:string;before:Record<string,unknown>;after:Record<string,unknown>}
