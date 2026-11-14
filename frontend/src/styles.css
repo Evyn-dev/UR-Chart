@@ -34,3 +34,19 @@
 .feature-start{display:flex;justify-content:space-between;align-items:center;gap:16px;border-radius:16px;padding:22px 25px;background:#eae6f8}
 @media(max-width:1050px){.feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){.feature-grid{grid-template-columns:1fr}.feature-hub-guest{padding:0 16px 45px}.feature-guest-nav{padding:18px 0 30px}.feature-start{flex-direction:column;align-items:stretch}.feature-tile{padding:19px}.feature-important{margin-bottom:22px}}
+
+
+/* Recovery assistant interaction status — illustrative, never live patient ECG data. */
+.assistant-activity{display:flex;gap:15px;align-items:center;padding:15px 19px;margin:0 0 19px;border-radius:15px;border:1px solid #dfe5f3;background:#f5f8fd;min-height:78px}
+.assistant-activity strong{font-size:14px;font-weight:800;color:#26395f}
+.assistant-activity p{font-size:12px;color:#697791;margin:4px 0 0}
+.assistant-ecg{width:118px;height:53px;flex-shrink:0;overflow:hidden;position:relative;border-radius:9px;background:#12293c;display:grid;align-items:center}
+.assistant-ecg-svg{width:240px;height:50px;max-width:none;overflow:visible;animation:assistantEcgScroll 1.55s linear infinite}
+.assistant-ecg-svg path{fill:none;stroke:#71e7b1;stroke-linecap:round;stroke-linejoin:round;stroke-width:2.5;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 3px #44d69b)}
+.assistant-ecg-icon{display:none}
+.assistant-heart{width:70px;height:54px;display:grid;place-items:center;flex-shrink:0;color:#d83d5b}
+.assistant-heart svg{animation:assistantHeartBeat 1s ease-in-out infinite;filter:drop-shadow(0 2px 5px #d83d5b33)}
+@keyframes assistantEcgScroll{from{transform:translateX(0)}to{transform:translateX(-120px)}}
+@keyframes assistantHeartBeat{0%,55%,100%{transform:scale(1)}14%{transform:scale(1.18)}27%{transform:scale(.97)}40%{transform:scale(1.11)}}
+@media(max-width:540px){.assistant-activity{padding:12px;gap:10px}.assistant-ecg{width:106px}}
+@media(prefers-reduced-motion:reduce){.assistant-ecg-svg,.assistant-heart svg{animation:none}}
