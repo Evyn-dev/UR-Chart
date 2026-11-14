@@ -1,4 +1,5 @@
 import secrets
+import hashlib
 from uuid import UUID
 
 import httpx
@@ -18,7 +19,7 @@ def get_db(request: Request):
 
 def authenticated_identity(settings, credentials):
     """Verify bearer tokens server-side, never from unverified JWT claims."""
-    if not settings.demo_auth_enabled and not (settings.supabase_url and settings.supabase_publishable_key):
+    if not (settings.demo_auth_enabled or settings.hosted_demo_code_hash or (settings.supabase_url and settings.supabase_publishable_key)):
         raise HTTPException(503, "Authentication provider not configured")
     if not credentials:
         raise HTTPException(401, "Valid bearer token required", headers={"WWW-Authenticate": "Bearer"})
@@ -28,6 +29,13 @@ def authenticated_identity(settings, credentials):
             if secrets.compare_digest(token.encode(), secret.encode()):
                 return user
         raise HTTPException(401, "Valid bearer token required", headers={"WWW-Authenticate": "Bearer"})
+
+    if settings.hosted_demo_code_hash:
+        # One shared, fictional demo patient. Never accept real medical data.
+        digest = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        if secrets.compare_digest(digest, settings.hosted_demo_code_hash):
+            return "synthetic-demo-patient"
+        raise HTTPException(401, "Invalid demo access code", headers={"WWW-Authenticate": "Bearer"})
 
     if settings.supabase_url and settings.supabase_publishable_key:
         try:
