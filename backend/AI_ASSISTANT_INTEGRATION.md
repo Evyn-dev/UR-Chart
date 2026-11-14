@@ -20,6 +20,21 @@ This PR replaces the **Java proposal** with Python code that runs inside the tea
 
 For optional generative replies, set `AI_PROVIDER=openai`, `AI_API_KEY=<server-secret>`, and optionally `AI_MODEL` in ignored `backend/.env`, then restart the server. Never commit secrets. Existing `approved_instructions` mode remains available without an external service.
 
+## Zero-credit AI setup for demo day (Windows)
+
+**No OpenAI API balance is needed.** The shared FastAPI app can use a local Ollama model.
+
+1. Install Ollama for Windows from https://ollama.com/download and open the Ollama app.
+2. In any PowerShell terminal run `ollama pull llama3.2:3b` (requires an internet connection once to download model weights). If the CLI is not recognized, reopen the terminal after installation.
+3. Edit **ignored** `backend/.env`: set `AI_PROVIDER=ollama` and `LOCAL_AI_MODEL=llama3.2:3b`. Remove the exposed/revoked OpenAI API key or leave `AI_API_KEY=` empty.
+4. With your existing demo token and virtual environment active, restart backend from `backend/`: `python -m uvicorn app.main:app --reload --no-access-log`.
+5. Keep `frontend/assistant-demo` served on port 5173 and connect with the *demo bearer token*, not an API key. Ask a recovery question. Local model calls can be slower on first load.
+6. If Ollama cannot be installed today, use `AI_PROVIDER=approved_instructions` instead: this is a reliable, offline, **non-generative** demo mode that quotes only the approved instructions, while voice and reminders continue to work.
+
+Optional verification: `ollama list` should display `llama3.2:3b`; `ollama run llama3.2:3b "Say hello"` checks whether the model can generate. The Ollama service must be available on `http://127.0.0.1:11434`, its default localhost address. No Python `openai` package is required by our production code (the paid adapter uses `httpx`).
+
+Local AI is still **not clinically validated**, is not automatic 24/7 monitoring, and is for fictional data only. A localhost model reduces the need to send demo conversation text to a third-party model API but is not proof of production-grade privacy or compliance. Browser microphone and browser notifications remain active-tab demonstrations, not background phone features.
+
 ## Routes
 
 | Method | Path | Purpose |
