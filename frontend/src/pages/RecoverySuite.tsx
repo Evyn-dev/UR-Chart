@@ -2,6 +2,7 @@ import {useEffect,useState} from 'react';
 import {Link,useSearchParams} from 'react-router-dom';
 import {AlertTriangle,CalendarDays,Check,ClipboardList,MapPin,MessageCircle,PhoneCall,Pill,ShieldAlert,Printer} from 'lucide-react';
 import {useSession} from '../hooks/session';
+import {MedicationReminderToggle} from '../components/MedicationReminders';
 import {checkinsApi} from '../services/checkins';
 import {medicationsApi} from '../services/medications';
 import type {Checkin,MedicationSummary,Relationship} from '../types/api';
@@ -134,6 +135,7 @@ export function DailyBriefing(){
     <p>{brief.message}</p>
    </>}
   </Panel>
+  <Panel title="Medication reminders"><MedicationReminderToggle/></Panel>
   <Panel title="Medication watchlist">
    <p>Unrecorded is not the same as missed. Review your schedule and record what actually happened.</p>
    {summary?.medications.map(m=>{
