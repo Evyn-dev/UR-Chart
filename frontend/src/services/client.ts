@@ -22,9 +22,10 @@ export function createClient(token:string,base=import.meta.env.VITE_API_BASE_URL
     return payload.data as T;
   };
   async function uploadFile(file:File, patientId?:string){
-    const response=await fetch(`${base.replace(/\\/$/,'')}/api/documents/upload`,{
+    const fileType=file.type||({'pdf':'application/pdf','png':'image/png','jpg':'image/jpeg','jpeg':'image/jpeg','txt':'text/plain'}[file.name.split('.').pop()?.toLowerCase()||'']||'');
+    const response=await fetch(`${base.replace(/\/$/,'')}/api/documents/upload`,{
       method:'POST',cache:'no-store',
-      headers:{Authorization:`Bearer ${token}`,'Content-Type':file.type,
+      headers:{Authorization:`Bearer ${token}`,'Content-Type':fileType,
         'X-Document-Name':encodeURIComponent(file.name),
         ...(patientId?{'X-Target-Patient-Id':patientId}:{})},
       body:file
@@ -34,7 +35,7 @@ export function createClient(token:string,base=import.meta.env.VITE_API_BASE_URL
     return payload.data;
   }
   async function downloadFile(id:string){
-    const response=await fetch(`${base.replace(/\\/$/,'')}/api/documents/${encodeURIComponent(id)}`,{
+    const response=await fetch(`${base.replace(/\/$/,'')}/api/documents/${encodeURIComponent(id)}`,{
       cache:'no-store',headers:{Authorization:`Bearer ${token}`}
     });
     if(!response.ok)throw new ApiError('Could not download this document',response.status);
