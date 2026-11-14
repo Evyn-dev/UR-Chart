@@ -85,8 +85,10 @@ def main():
     mode.add_argument("--check", action="store_true", help="Only verify fictional records; no writes")
     args = parser.parse_args()
     settings = Settings()
-    if not settings.hosted_demo_code_hash:
-        raise SystemExit("This command requires HOSTED_DEMO_CODE_HASH (hashed shared demo login).")
+    if not (settings.hosted_demo_code_hash or (
+            settings.app_env != "production" and settings.demo_auth_enabled and
+            PATIENT_IDENTITY in settings.demo_tokens.values())):
+        raise SystemExit("This command requires a configured fictional demo patient identity.")
     if args.seed:
         if settings.app_env not in {"development", "test", "production"}:
             raise SystemExit("Unsupported application environment.")
