@@ -156,3 +156,9 @@
 .caregiver-summary-section dt{color:#b5d4c1;text-transform:capitalize}
 .caregiver-summary-section dd{margin:0;text-align:right;color:#ecfff4}
 .caregiver-summary-section p{color:#c2e1cd}
+
+/* Opt-in, page-wide wake-word microphone. Visible even when Clara is minimized. */
+.clara-handsfree-toggle{position:fixed;right:clamp(12px,2.8vw,31px);bottom:99px;z-index:90;display:flex;align-items:center;justify-content:center;gap:7px;min-height:35px;padding:7px 12px;border:1px solid #477a5e;border-radius:20px;background:#123326;color:#bcd7c9;font-size:11px;font-weight:750;box-shadow:0 4px 14px #001c1177;cursor:pointer}
+.clara-handsfree-toggle.is-on{background:#166c41;color:#f2fff7;border-color:#54f5a0;box-shadow:0 0 0 2px #39ff9a33,0 4px 14px #001c1177}
+.clara-handsfree-toggle:focus-visible{outline:3px solid #50ffa6;outline-offset:2px}
+@media(max-width:560px){.clara-handsfree-toggle{bottom:92px;right:14px}}
