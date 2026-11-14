@@ -53,4 +53,5 @@ class RiskResult(BaseModel):
     status: str
     prototype_only: bool
     alerts: list[AlertOut]
+    historical_alerts: list[AlertOut] = []
     guidance: str
