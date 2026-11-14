@@ -1,6 +1,7 @@
 """Provider boundary. External generators require a separately reviewed adapter."""
 from dataclasses import dataclass
 from typing import Protocol
+from app.services.medlineplus import reference_links
 
 
 class AIUnavailable(Exception):
@@ -11,6 +12,7 @@ class AIUnavailable(Exception):
 class PatientContext:
     approved_instructions: tuple[str, ...]
     patient_snapshot: str = ""
+    medical_references: tuple = ()
 
 
 class AIProvider(Protocol):
@@ -44,7 +46,7 @@ def respond(provider, prompt, context, history):
         result = provider.respond(prompt, context, history)
         if not isinstance(result, str) or not result.strip() or len(result) > 20000:
             raise AIUnavailable("Invalid provider response")
-        return result
+        return result + reference_links(context.medical_references)
     except Exception as exc:
         # Never expose provider payloads, prompts or credentials in HTTP errors.
         raise AIUnavailable("AI service unavailable") from exc
