@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, Query, Request, HTTPException
 from sqlalchemy import select
 from app.auth import current_patient, get_db
-from app.models import Conversation, Message, RecoveryPlan, Medication, MedicationLog, Checkin, Alert
+from app.models import Conversation, Message, RecoveryPlan, Medication, MedicationLog, Checkin, Alert, CurriculumTask
 from app.schemas import Data, ChatCreate, ChatOut, ConversationOut, ConversationDetail
 from app.services.records import owned, listing
 from app.services.ai import PatientContext, AIUnavailable, respond
@@ -49,7 +49,14 @@ def message(body: ChatCreate, request: Request, patient=Depends(current_patient)
         MedicationLog.recorded_at >= lower_bound,
     ).order_by(MedicationLog.recorded_at.desc()).limit(45)).all() if medication_names else []
     import json
+    curriculum_tasks = db.scalars(select(CurriculumTask).where(
+        CurriculumTask.patient_id == patient.id, CurriculumTask.status != "archived"
+    ).order_by(CurriculumTask.position, CurriculumTask.created_at).limit(30)).all()
     snapshot = json.dumps({
+        "caregiver_managed_educational_tasks_not_clinical_orders": [{
+            "title": t.title, "description": t.description, "due_day": t.due_day.isoformat() if t.due_day else None,
+            "status": t.status
+        } for t in curriculum_tasks],
         "active_medications": [{
             "name": m.name, "dosage_as_entered": m.dosage,
             "schedule_as_entered": m.schedule
