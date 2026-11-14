@@ -156,3 +156,44 @@
 .caregiver-summary-section dt{color:#b5d4c1;text-transform:capitalize}
 .caregiver-summary-section dd{margin:0;text-align:right;color:#ecfff4}
 .caregiver-summary-section p{color:#c2e1cd}
+
+
+/* Compact mobile landing screen: no forced desktop-sized hero or wasted scroll. */
+@media (max-width: 820px) {
+  .mon-screen { min-height: 100dvh; overflow-x: clip; }
+  .mon-nav { padding: 15px 18px; }
+  .mon-main { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; max-width: 600px; gap: 20px; padding: 20px 18px 0; }
+  .mon-hero { min-width: 0; }
+  .mon-hero h1 { font-size: clamp(35px, 8vw, 53px); line-height: 1.04; }
+  .mon-hero p { font-size: 15px; line-height: 1.5; margin-bottom: 14px; }
+  .mon-card { width: 100%; max-width: none; padding: 23px; }
+  .mon-trace { flex: none; min-height: 115px; }
+  .mon-steps { gap: 9px; padding: 0 18px calc(16px + env(safe-area-inset-bottom, 0px)); }
+  .mon-steps div { padding: 12px; }
+  .mon-steps span { font-size: 13px; }
+}
+@media (max-width: 560px) {
+  .mon-nav { gap: 12px; padding: 13px 16px 4px; }
+  .mon-brand { font-size: 20px; }
+  .mon-brand svg { width: 23px; height: 23px; }
+  .mon-link { font-size: 11px; text-align: right; max-width: 150px; }
+  .mon-main { padding: 15px 16px 0; gap: 15px; }
+  .mon-eyebrow { font-size: 10px; letter-spacing: .08em; }
+  .mon-hero h1 { font-size: clamp(34px, 10vw, 46px); margin: 11px 0; }
+  .mon-hero p { font-size: 14px; margin-bottom: 12px; }
+  .mon-features { gap: 7px 14px; }
+  .mon-features span { font-size: 11px; }
+  .mon-card { padding: 19px 16px; border-radius: 15px; }
+  .mon-card .entry-foot { line-height: 1.45; }
+  .mon-trace { min-height: 80px; opacity: .65; }
+  .mon-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding-inline: 16px; }
+  .mon-steps div { padding: 9px 7px; border-radius: 10px; }
+  .mon-steps span { font-size: 11px; }
+  .mon-steps b { font-size: 10px; }
+}
+@media (max-width: 360px) {
+  .mon-main { padding-inline: 12px; }
+  .mon-nav { padding-inline: 12px; }
+  .mon-hero h1 { font-size: 33px; }
+  .mon-steps { padding-inline: 12px; }
+}
