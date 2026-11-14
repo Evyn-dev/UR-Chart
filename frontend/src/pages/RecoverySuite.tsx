@@ -14,6 +14,7 @@ type Briefing={day:string;patient_name:string;scheduled_doses:number;doses_witho
 type Prep={patient_name:string;from:string;through:string;checkins:Array<{day:string;pain:number|null;wellbeing:number|null;activity_minutes:number|null;symptoms:string[];note:string|null}>;medications:Array<{name:string;dosage:string;schedule:string}>;dose_log_counts:Record<string,number>;suggested_questions:string[];notice:string};
 type Appointment={id:string;date_time:string;title:string;place:string|null;notes:string|null};
 type Note={id:string;body:string;created_at:string;relationship_id:string;author:string};
+type MedicalCard={allergies:string[];conditions:string[];note:string|null;warning:string};
 
 function useFetch<T>(path:string|null){
  const {api}=useSession();const [value,setValue]=useState<T|null>(null);const [error,setError]=useState('');
@@ -34,6 +35,9 @@ export function EmergencyConnect(){
  const {value:contacts,refresh:refreshContacts}=useFetch<Contact[]>(role==='patient'?'/engagement/contacts':null);
  const {value:history,refresh:refreshHistory}=useFetch<Event[]>(role==='patient'?'/engagement/emergencies':'/engagement/caregiver/emergencies');
  const {value:prep}=useFetch<Prep>(role==='patient'?'/engagement/visit-prep':null);
+ const {value:medicalCard,refresh:refreshMedicalCard}=useFetch<MedicalCard>(role==='patient'?'/engagement/medical-card':null);
+ const [allergies,setAllergies]=useState('');const [conditions,setConditions]=useState('');const [medicalNote,setMedicalNote]=useState('');
+ useEffect(()=>{if(medicalCard){setAllergies(medicalCard.allergies.join(', '));setConditions(medicalCard.conditions.join(', '));setMedicalNote(medicalCard.note||'')}},[medicalCard]);
  const {value:relationships}=useFetch<Relationship[]>(role==='patient'?'/caregivers':'/caregiver/relationships');
  const [sending,setSending]=useState(false);const [location,setLocation]=useState('');const [locSharing,setLocSharing]=useState(false);
  const [error,setError]=useState('');const [notice,setNotice]=useState('');const [caregiverPhone,setCaregiverPhone]=useState('');
@@ -66,6 +70,12 @@ export function EmergencyConnect(){
    ()=>setError('Location permission was denied. Emergency mode still works without location.'),
    {enableHighAccuracy:false,timeout:8000,maximumAge:60000});
  };
+ const saveCard=async(e:React.FormEvent)=>{e.preventDefault();
+  const split=(value:string)=>value.split(',').map(s=>s.trim()).filter(Boolean);
+  try{await api('/engagement/medical-card','POST',{allergies:split(allergies),conditions:split(conditions),note:medicalNote||null});
+   refreshMedicalCard();setNotice('Patient-entered medical card saved. It has not been verified by a clinician.');}
+  catch(err){setError(errorMsg(err))}
+ };
  const configure=async(id:string,enabled:boolean,rank:number,name:string)=>{
   setError('');try{await api('/engagement/contacts','POST',{relationship_id:id,enabled,priority:rank,contact_name:name});refreshContacts();setNotice('Emergency contact preference saved. The caregiver must also consent to receiving calls or texts.')}
   catch(e){setError(errorMsg(e))}
@@ -94,11 +104,18 @@ export function EmergencyConnect(){
    </Panel>
    <Panel title="Emergency medical card">
     <p><strong>Patient:</strong> {prep?.patient_name||'Loading patient record…'}</p>
-    <p><strong>Allergies:</strong> Not entered as a verified structured allergy record. Check your medical paperwork.</p>
+    <p><strong>Allergies:</strong> {medicalCard?.allergies.join(', ')||'Not documented — never assume no allergies'}</p>
+    <p><strong>Conditions and procedures:</strong> {medicalCard?.conditions.join(', ')||'Not documented'}</p>
     <p><strong>Recorded medications:</strong></p>
     <ul>{prep?.medications.map(m=><li key={m.name}>{m.name} — {m.dosage}</li>)||<li>Loading medication list…</li>}</ul>
-    <p><strong>Conditions and procedures:</strong> Refer to the patient's approved discharge plan; unverified demo narratives are not medical diagnoses.</p>
     <p><strong>Caregiver contacts:</strong> {contacts?.filter(c=>c.enabled).map(c=>c.contact_name).join(', ')||'None configured'}</p>
+    <form onSubmit={saveCard} className="eng-form">
+     <label>Allergies (comma-separated; list only what is known)<input value={allergies} onChange={e=>setAllergies(e.target.value)} placeholder="Not documented"/></label>
+     <label>Conditions (comma-separated)<input value={conditions} onChange={e=>setConditions(e.target.value)} placeholder="Record relevant conditions"/></label>
+     <label>Notes for responders<textarea value={medicalNote} onChange={e=>setMedicalNote(e.target.value)} maxLength={700} rows={2}/></label>
+     <button className="btn secondary" type="submit">Save medical card</button>
+    </form>
+    <small>All details are patient-entered or fictional; they are not independently verified.</small>
    </Panel>
    <Panel title="Choose your emergency contacts">
     <p>First invite your caregiver through <Link to="/caregivers">Caregiver access</Link>. After they accept, enable them here. They must separately consent to using their phone number.</p>
