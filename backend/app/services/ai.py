@@ -34,6 +34,9 @@ def build_provider(settings) -> AIProvider:
     if settings.ai_provider == "openai":
         from app.services.openai_recovery import OpenAIRecoveryProvider
         return OpenAIRecoveryProvider(settings.ai_api_key, settings.ai_model)
+    if settings.ai_provider == "ollama":
+        from app.services.local_recovery import OllamaRecoveryProvider
+        return OllamaRecoveryProvider(settings.local_ai_model)
     if settings.ai_provider == "approved_instructions":
         return ApprovedInstructionsProvider()
     return DisabledProvider()
