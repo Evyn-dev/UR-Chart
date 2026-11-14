@@ -9,7 +9,7 @@ from sqlalchemy import select
 
 from app.config import Settings
 from app.database import make_engine, session_factory
-from app.models import Patient, RecoveryPlan, Medication, MedicationLog, MedicationSchedule, Checkin, Alert, CurriculumTask, CaregiverRelationship
+from app.models import Patient, RecoveryPlan, Medication, MedicationLog, MedicationSchedule, Checkin, Alert, CurriculumTask, CaregiverRelationship, CaregiverAudit
 from app.services.medications import replace_schedule, occurrences, utc
 
 PLACEHOLDER_PLAN = "This is fictional demonstration content. Your care team provides your recovery instructions."
@@ -205,20 +205,51 @@ def seed(settings):
                             symptoms=entry["symptoms"], symptom_reports=[], note=entry["note"],
                         ))
                 seed_sample_alert(db, patient, today)
-                # Fictional caregiver relationship for the demo only; never overwrite consent.
-                demo_caregiver = "synthetic-demo-caregiver"
-                if identity != demo_caregiver and (settings.hosted_demo_code_hash or settings.demo_auth_enabled):
+                # A preaccepted fictional invitation, solely for the fixed demo identities.
+                # Never grant access to real patient accounts or other configured identities.
+                if identity == "synthetic-demo-patient":
+                    demo_caregiver = "synthetic-demo-caregiver"
+                    scopes = ["recovery_summary", "checkin_summary", "medication_adherence", "alerts"]
+                    severities = ["routine", "needs_clinical_review", "urgent", "emergency"]
                     rel = db.scalar(select(CaregiverRelationship).where(
                         CaregiverRelationship.patient_id == patient.id,
                         CaregiverRelationship.caregiver_user_id == demo_caregiver,
                     ))
                     if rel is None:
-                        db.add(CaregiverRelationship(
+                        rel = CaregiverRelationship(
                             patient_id=patient.id, caregiver_user_id=demo_caregiver,
-                            status="active",
-                            permissions=["recovery_summary", "checkin_summary", "medication_adherence", "alerts"],
-                            alert_severities=["routine", "needs_clinical_review", "urgent", "emergency"],
+                            status="active", permissions=scopes, alert_severities=severities,
                             responded_at=current_time,
+                        )
+                        db.add(rel)
+                        db.flush()
+                        db.add(CaregiverAudit(
+                            patient_id=patient.id, relationship_id=rel.id,
+                            actor_user_id=identity, action="invitation_created",
+                            details={"source": "fictional_demo_seed", "permissions": scopes},
+                        ))
+                        db.add(CaregiverAudit(
+                            patient_id=patient.id, relationship_id=rel.id,
+                            actor_user_id=demo_caregiver, action="invitation_accepted",
+                            details={"source": "fictional_demo_seed"},
+                        ))
+                    elif (rel.status != "active" or
+                          set(rel.permissions) != set(scopes) or
+                          set(rel.alert_severities) != set(severities)):
+                        previous = {"status": rel.status, "permissions": rel.permissions,
+                                    "alert_severities": rel.alert_severities}
+                        rel.status = "active"
+                        rel.permissions = scopes
+                        rel.alert_severities = severities
+                        rel.responded_at = rel.responded_at or current_time
+                        rel.revoked_at = None
+                        rel.version += 1
+                        db.add(CaregiverAudit(
+                            patient_id=patient.id, relationship_id=rel.id,
+                            actor_user_id=identity, action="demo_access_restored",
+                            details={"source": "fictional_demo_seed", "before": previous,
+                                     "after": {"status": "active", "permissions": scopes,
+                                               "alert_severities": severities}},
                         ))
                 # Nonclinical sample tasks. Existing edits remain untouched on reseeding.
                 demo_tasks = [
