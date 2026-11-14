@@ -8,7 +8,15 @@ import {patientsApi} from './services/patients';
 import type {Patient} from './types/api';
 import {Shell} from './components/Shell';
 import {FeaturesPage} from './pages/FeaturesPage';
-import {Dashboard,MedicationsPage,CheckinPage,ProgressPage,AlertsPage,AssistantPage,CaregiversPage,SettingsPage,UnavailablePage} from './pages/Pages';
+import {Dashboard} from './pages/Dashboard';
+import {MedicationsPage} from './pages/MedicationsPage';
+import {CheckinPage} from './pages/CheckinPage';
+import {ProgressPage} from './pages/ProgressPage';
+import {AlertsPage} from './pages/AlertsPage';
+import {AssistantPage} from './pages/AssistantPage';
+import {CaregiversPage} from './pages/CaregiversPage';
+import {SettingsPage} from './pages/SettingsPage';
+import {UnavailablePage} from './pages/UnavailablePage';
 
 const sessionKey='urchart-demo-session';
 export function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
