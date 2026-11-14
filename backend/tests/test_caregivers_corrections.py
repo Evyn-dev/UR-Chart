@@ -91,7 +91,9 @@ def test_checkin_correction_audit_trends_and_emergency_preservation(client, auth
     assert trend["averages"]["pain_level"] == 1 and trend["consistency_percent"] == 50 and trend["missing_days"] == 1
     for _ in range(2):
         assert client.post(path + "/evaluate", headers=auth).status_code == 200
-    assert len(client.get(path + "/risk", headers=auth).json()["data"]["alerts"]) == 1
+    repeated_risk = client.get(path + "/risk", headers=auth).json()["data"]
+    assert repeated_risk["alerts"] == []
+    assert len(repeated_risk["historical_alerts"]) == 1
 
 
 def test_alert_actions_emergency_confirmation_and_audit(client, auth, other):
@@ -256,8 +258,11 @@ def test_correction_can_trigger_same_rule_again_without_duplicate_processing(cli
     response = client.patch(path, headers=auth, json={"expected_version": 1, "reason": "Added pain score", "observation": {**observation, "pain_level": 3}})
     assert response.status_code == 200
     client.post(path + "/evaluate", headers=auth)
-    alerts = client.get(path + "/risk", headers=auth).json()["data"]["alerts"]
-    assert len(alerts) == 2 and {a["checkin_version"] for a in alerts} == {1, 2}
+    risk_result = client.get(path + "/risk", headers=auth).json()["data"]
+    assert len(risk_result["alerts"]) == 1
+    assert risk_result["alerts"][0]["checkin_version"] == 2
+    assert len(risk_result["historical_alerts"]) == 1
+    assert risk_result["historical_alerts"][0]["checkin_version"] == 1
 
 
 def test_supply_forecast_uses_only_confirmed_units(client, app, auth):
