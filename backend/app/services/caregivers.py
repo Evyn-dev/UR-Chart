@@ -25,7 +25,10 @@ def transition(db, relationship, expected, allowed, values):
 def invite(db, patient, body, settings):
     if body.caregiver_user_id == patient.user_id:
         raise HTTPException(422, "Cannot invite yourself")
-    if body.caregiver_user_id not in settings.demo_tokens.values():
+    valid_identities = set(settings.demo_tokens.values())
+    if settings.hosted_demo_code_hash:
+        valid_identities.add("synthetic-demo-caregiver")
+    if body.caregiver_user_id not in valid_identities:
         raise HTTPException(422, "Recipient must be a configured demo identity")
     record = db.scalar(select(CaregiverRelationship).where(CaregiverRelationship.patient_id == patient.id,
         CaregiverRelationship.caregiver_user_id == body.caregiver_user_id))
