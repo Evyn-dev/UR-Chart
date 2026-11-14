@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Request, HTTPException
 from sqlalchemy import select
 from app.auth import current_patient, get_db
-from app.models import Conversation, Message, RecoveryPlan
+from app.models import Conversation, Message, RecoveryPlan, Medication, Checkin, Alert
 from app.schemas import Data, ChatCreate, ChatOut, ConversationOut, ConversationDetail
 from app.services.records import owned, listing
 from app.services.ai import PatientContext, AIUnavailable, respond
@@ -26,8 +26,32 @@ def message(body: ChatCreate, request: Request, patient=Depends(current_patient)
     recent = db.scalars(select(Message).where(Message.conversation_id == conversation.id).order_by(Message.created_at.desc(), Message.id.desc()).limit(20)).all() if conversation else []
     history = [{"role": m.role, "content": m.content} for m in reversed(recent)]
     instructions = db.scalars(select(RecoveryPlan.approved_instructions).where(RecoveryPlan.patient_id == patient.id, RecoveryPlan.approved_by.is_not(None)).order_by(RecoveryPlan.created_at).limit(10)).all()
+    # Only the currently authenticated patient's own records are exposed to AI.
+    medications = db.scalars(select(Medication).where(
+        Medication.patient_id == patient.id, Medication.active.is_(True)
+    ).order_by(Medication.created_at.desc()).limit(10)).all()
+    checkins = db.scalars(select(Checkin).where(
+        Checkin.patient_id == patient.id
+    ).order_by(Checkin.day.desc()).limit(5)).all()
+    alerts = db.scalars(select(Alert).where(
+        Alert.patient_id == patient.id
+    ).order_by(Alert.created_at.desc()).limit(5)).all()
+    import json
+    snapshot = json.dumps({
+        "active_medications": [{
+            "name": m.name, "dosage_as_entered": m.dosage,
+            "schedule_as_entered": m.schedule
+        } for m in medications],
+        "recent_checkins": [{
+            "day": c.day.isoformat(), "pain_level": c.pain_level,
+            "wellbeing": c.wellbeing, "symptoms_as_entered": c.symptoms
+        } for c in checkins],
+        "recent_alerts": [{
+            "category": a.category, "severity": a.severity, "status": a.status
+        } for a in alerts],
+    }, default=str)
     try:
-        answer = respond(request.app.state.ai, body.message, PatientContext(tuple(instructions)), history)
+        answer = respond(request.app.state.ai, body.message, PatientContext(tuple(instructions), snapshot), history)
     except AIUnavailable:
         raise HTTPException(503, "AI service unavailable; no messages saved") from None
     if conversation is None:
