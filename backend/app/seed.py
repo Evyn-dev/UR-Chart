@@ -129,12 +129,12 @@ def seed_sample_alert(db, patient, day):
 
 
 def seed(settings):
-    if settings.app_env not in {"development", "test"} or not (settings.demo_auth_enabled or settings.hosted_demo_code_hash):
+    if settings.app_env not in {"development", "test"} or not (settings.demo_auth_enabled or settings.hosted_demo_code_hash or settings.presentation_demo_enabled):
         raise RuntimeError("Seeding requires development/test mode with demo authentication")
     # The hosted shared code authenticates as this single patient identity.
     # Local DEMO_TOKENS map their tokens to a patient identity; seed each of those too.
     identities = set(settings.demo_tokens.values()) if settings.demo_auth_enabled else set()
-    if settings.hosted_demo_code_hash:
+    if settings.hosted_demo_code_hash or settings.presentation_demo_enabled:
         identities.add("synthetic-demo-patient")
     if not identities:
         raise RuntimeError("No demo patient identities are configured")
