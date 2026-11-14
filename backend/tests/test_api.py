@@ -167,7 +167,7 @@ def test_seed_is_idempotent(app, client, auth):
         assert len(db.scalars(select(RecoveryPlan)).all()) == 2
     assert client.get("/api/patients/me", headers=auth).status_code == 200
     with pytest.raises(RuntimeError):
-        seed(Settings(_env_file=None, app_env="production"))
+        seed(Settings(_env_file=None, app_env="test", demo_auth_enabled=False, demo_tokens={}))
 
 
 def test_disabled_ai(client, app, auth):
