@@ -26,7 +26,7 @@ def invite(db, patient, body, settings):
     if body.caregiver_user_id == patient.user_id:
         raise HTTPException(422, "Cannot invite yourself")
     valid_identities = set(settings.demo_tokens.values())
-    if settings.hosted_demo_code_hash:
+    if settings.demo_auth_enabled or settings.hosted_demo_code_hash:
         valid_identities.add("synthetic-demo-caregiver")
     if body.caregiver_user_id not in valid_identities:
         raise HTTPException(422, "Recipient must be a configured demo identity")
