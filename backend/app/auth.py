@@ -25,9 +25,16 @@ def authenticated_identity(settings, credentials):
         raise HTTPException(401, "Valid bearer token required", headers={"WWW-Authenticate": "Bearer"})
     token = credentials.credentials
     if settings.demo_auth_enabled:
+        # In development only, role-suffixed demo credentials let the same
+        # fictional access code open a separate caregiver identity.
+        # Authorization to see another patient's records still requires an
+        # accepted, patient-granted CaregiverRelationship with limited scopes.
+        supplied, separator, persona = token.rpartition(":")
+        if not separator or persona not in {"patient", "caregiver"}:
+            supplied, persona = token, "patient"
         for secret, user in settings.demo_tokens.items():
-            if secrets.compare_digest(token.encode(), secret.encode()):
-                return user
+            if secrets.compare_digest(supplied.encode(), secret.encode()):
+                return "synthetic-demo-caregiver" if persona == "caregiver" else user
         raise HTTPException(401, "Valid bearer token required", headers={"WWW-Authenticate": "Bearer"})
 
     if settings.hosted_demo_code_hash:
