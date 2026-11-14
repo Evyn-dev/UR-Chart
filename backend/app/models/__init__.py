@@ -146,3 +146,5 @@ class RiskEvaluation(Record, Base):
 
 
 from app.models.support import RecoveryAudit, CaregiverRelationship, CaregiverAudit, CurriculumTask, CurriculumAudit
+
+from app.models.documents import SharedDocument
