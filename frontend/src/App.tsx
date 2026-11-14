@@ -7,6 +7,7 @@ import {createClient} from './services/client';
 import {patientsApi} from './services/patients';
 import type {Patient} from './types/api';
 import {Shell} from './components/Shell';
+import {PatientSampleDemo} from './components/PatientSampleDemo';
 import {EcgTrace,MonitorBackdrop} from './components/MonitorBackdrop';
 import {FeaturesPage} from './pages/FeaturesPage';
 import {Dashboard} from './pages/Dashboard';
@@ -20,7 +21,7 @@ import {SettingsPage} from './pages/SettingsPage';
 import {UnavailablePage} from './pages/UnavailablePage';
 
 const sessionKey='urchart-demo-session';
-export function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
+export function DemoLogin({onLogin,onOpenDemo}:{onLogin:(token:string,patient:Patient)=>void;onOpenDemo:()=>void}){
  const health=useResource(()=>createClient('')<{login_mode:'demo_token'|'demo_code'|'supabase'|'unconfigured'}>('/health'),[]);
  const hostedDemo=health.data?.login_mode==='demo_code';
  const [token,setToken]=useState('');
@@ -57,6 +58,7 @@ export function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>voi
      {error&&<div role="alert" className="feedback error">{error}</div>}
      <button className="btn primary wide" disabled={working||health.loading||!health.data||health.data.login_mode==='unconfigured'} type="submit">{working||health.loading?'Connecting…':'Enter recovery dashboard'}<ArrowRight size={18}/></button>
     </form>
+    <button type="button" className="btn wide" style={{marginTop:12}} onClick={onOpenDemo}>Open patient demo</button>
     <p className="entry-foot"><LockKeyhole size={14}/> {hostedDemo?'No email required. Shared fictional patient for demonstration only. Anyone holding the code can access its records.':'Use the token assigned to your fictional demo identity.'} Never enter real health data.</p>
    </section>
   </main>
@@ -66,6 +68,7 @@ export function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>voi
 }
 export default function App(){
   const {pathname}=useLocation();
+  const [sampleOpen,setSampleOpen]=useState(false);
   const [token,setToken]=useState(()=>{try{return sessionStorage.getItem(sessionKey)||''}catch{return ''}});
   const [patient,setPatient]=useState<Patient|null>(null);const [checking,setChecking]=useState(Boolean(token));
   useEffect(()=>{
@@ -86,8 +89,9 @@ export default function App(){
     try{sessionStorage.removeItem(sessionKey)}catch{/* optional */}
     setPatient(null);setToken('');
   }
+  if(sampleOpen)return <PatientSampleDemo onExit={()=>setSampleOpen(false)}/>;
   if(checking)return <div className="startup"><HeartPulse size={36}/><p>Opening your recovery space…</p></div>;
-  if(!token||!patient)return pathname==='/features'?<FeaturesPage guest/>:<DemoLogin onLogin={login}/>;
+  if(!token||!patient)return pathname==='/features'?<FeaturesPage guest/>:<DemoLogin onLogin={login} onOpenDemo={()=>setSampleOpen(true}/>;
   return <SessionProvider token={token} initialPatient={patient} signOut={signOut}>
     <Routes><Route element={<Shell/>}>
       <Route path="/" element={<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<AssistantPage/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
