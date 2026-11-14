@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
-from sqlalchemy import text
+from sqlalchemy import text, select
+from app.models import Patient
 from sqlalchemy.exc import SQLAlchemyError
 from pydantic import BaseModel
 from app.auth import get_db
@@ -28,6 +29,9 @@ def health(request: Request, db=Depends(get_db)):
         heads = set(ScriptDirectory(str(Path(__file__).resolve().parents[2] / "migrations")).get_heads())
         if revisions != heads:
             raise HTTPException(503, "Database migrations required")
+        # The migration table uses qualified raw SQL. Also exercise the actual
+        # SQLAlchemy schema translation used by all authenticated feature routes.
+        db.execute(select(Patient.id).limit(1)).first()
     except SQLAlchemyError:
         raise HTTPException(503, "Database unavailable or migrations required") from None
     settings = request.app.state.settings
