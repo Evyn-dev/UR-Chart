@@ -6,6 +6,7 @@ visible to the patient and their own uploader, never every caregiver.
 No client-supplied patient ID is trusted for ownership.
 """
 from uuid import UUID
+from urllib.parse import unquote
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, ConfigDict
@@ -99,7 +100,7 @@ async def upload_document(request: Request, actor=Depends(current_patient), db=D
                 raise HTTPException(413, "Maximum document size is 3 MB")
         except ValueError:
             raise HTTPException(400, "Invalid content length")
-    filename = request.headers.get("x-document-name", "").strip()
+    filename = unquote(request.headers.get("x-document-name", "")).strip()
     filename = filename.rsplit("/", 1)[-1].rsplit("\\", 1)[-1]
     if not filename or len(filename) > 180 or any(ord(ch) < 32 for ch in filename):
         raise HTTPException(422, "Choose a valid file name under 181 characters")
