@@ -8,6 +8,7 @@ import type {Patient} from './types/api';
 import {Shell} from './components/Shell';
 import {MonitorBackdrop,EcgTrace} from './components/MonitorBackdrop';
 import {ClaraAssistant} from './components/ClaraAssistant';
+import {OperationProvider,OperationSetup} from './components/OperationTemplates';
 import {FeaturesPage} from './pages/FeaturesPage';
 import {Dashboard,MedicationsPage,CheckinPage,ProgressPage,AlertsPage,CaregiversPage,SettingsPage,UnavailablePage} from './pages/Pages';
 
@@ -89,6 +90,7 @@ export default function App(){
   if(checking)return <div className="startup"><HeartPulse size={36}/><p>Opening your recovery space…</p></div>;
   if(!token||!patient)return pathname==='/features'?<FeaturesPage guest/>:<DemoLogin onLogin={login}/>;
   return <SessionProvider token={token} initialPatient={patient} role={token.endsWith(":caregiver")?"caregiver":"patient"} signOut={signOut}>
+    <OperationProvider key={patient.id} patientId={patient.id} enabled={!token.endsWith(':caregiver')}>
     <Routes><Route element={<Shell/>}>
       <Route path="/" element={token.endsWith(":caregiver")?<Navigate to="/caregivers" replace/>:<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<Dashboard/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
       <Route path="/appointments" element={<UnavailablePage title="Appointments" reason="Appointments are not connected to a backend service yet."/>}/>
@@ -96,5 +98,7 @@ export default function App(){
       <Route path="*" element={<Navigate to="/" replace/>}/>
     </Route></Routes>
     <ClaraAssistant/>
+    <OperationSetup/>
+    </OperationProvider>
   </SessionProvider>
 }

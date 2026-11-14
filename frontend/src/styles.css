@@ -322,3 +322,27 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display
   .panel { padding: 14px 12px; }
   .breadcrumb { max-width: 115px; }
 }
+
+
+/* Demo operation onboarding and procedure-aware recovery overview. */
+.operation-setup-backdrop{position:fixed;inset:0;z-index:110;display:grid;place-items:center;background:rgba(1,12,8,.78);padding:16px;overflow-y:auto}
+.operation-setup{width:min(100%,500px);max-height:calc(100dvh - 32px);overflow:auto;background:#0d221a;color:#e8fff4;border:1px solid #35684a;border-radius:22px;padding:24px;box-shadow:0 25px 80px rgba(0,0,0,.5)}
+.operation-setup-top{display:flex;justify-content:space-between;align-items:center}
+.operation-setup-icon,.operation-overview-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;color:#49ed96;background:#174731}
+.operation-skip{border:0;background:transparent;color:#b9d9c7;min-width:42px;min-height:42px}
+.operation-eyebrow{font-size:10px;font-weight:800;letter-spacing:.14em;color:#52ea9a;margin:0 0 8px}
+.operation-setup h2{font-size:26px;line-height:1.2;margin:8px 0 10px;color:#f3fff7}
+.operation-setup p:not(.operation-eyebrow){font-size:14px;color:#bbd8c8;line-height:1.55}
+.operation-picker label{display:block;margin:16px 0 7px;color:#d4f4df}
+.operation-picker select{background:#143628;color:#f2fff7;border:1px solid #4b9268;font-size:16px;min-height:48px;width:100%}
+.operation-setup-note{display:flex;gap:10px;align-items:flex-start;margin-top:18px;padding:12px;background:#163527;border-radius:12px;color:#cae7d7;font-size:12px;line-height:1.5}
+.operation-setup-note svg{flex-shrink:0;color:#6fe4a1}
+.operation-later{margin-top:14px;min-height:42px;padding:9px 14px;border:1px solid #527460;background:transparent;color:#deffed;border-radius:10px}
+.operation-overview{background:#0d221a;border:1px solid #28543b;color:#e6f9ed;padding:20px 22px;margin:0 0 18px;border-radius:16px}
+.operation-overview-heading{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.operation-overview h2{font-size:19px;line-height:1.25;color:#f0fff6;margin:0}
+.operation-overview h3{font-size:13px;color:#65ed9e;margin:16px 0 7px}
+.operation-overview ul{margin:0;padding-left:20px;display:grid;gap:5px;font-size:13px;line-height:1.5}
+.operation-category{font-size:12px;color:#b0d3bd;margin:0}
+.operation-overview .operation-disclaimer{border-top:1px solid #315642;padding-top:11px;margin:15px 0 0;color:#b4d6c0;font-size:11px}
+@media(max-width:600px){.operation-setup{padding:19px 16px;border-radius:17px}.operation-setup h2{font-size:22px}.operation-overview{padding:16px 14px}.operation-overview h2{font-size:17px}.operation-overview ul{font-size:12px}.operation-setup-backdrop{padding:10px}}
