@@ -8,6 +8,7 @@ import type {Patient} from './types/api';
 import {Shell} from './components/Shell';
 import {MonitorBackdrop,EcgTrace} from './components/MonitorBackdrop';
 import {ClaraAssistant} from './components/ClaraAssistant';
+import {MedicationReminders} from './components/MedicationReminders';
 import {OperationProvider,OperationSetup} from './components/OperationTemplates';
 import {FeaturesPage} from './pages/FeaturesPage';
 import {EmergencyConnect,DailyBriefing,RecoveryMilestones,DoctorVisitPrep,AppointmentPlanner,CaregiverSupportMessages} from './pages/RecoverySuite';
@@ -98,6 +99,7 @@ export default function App(){
       <Route path="/messages" element={<CaregiverSupportMessages/>}/>
       <Route path="*" element={<Navigate to="/" replace/>}/>
     </Route></Routes>
+    <MedicationReminders/>
     <ClaraAssistant/>
     <OperationSetup/>
     </OperationProvider>
