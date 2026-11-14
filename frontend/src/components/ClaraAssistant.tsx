@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import type {FormEvent} from 'react';
 import {HeartPulse,MessageCircle,Mic,MicOff,Send,X,Plus,Volume2,VolumeX,ShieldAlert,ChevronDown} from 'lucide-react';
-import {useLocation} from 'react-router-dom';
+import {useLocation,useNavigate} from 'react-router-dom';
 import {useSession} from '../hooks/session';
 import {chatApi} from '../services/chat';
 import type {Message} from '../types/api';
@@ -25,6 +25,7 @@ export function ClaraAssistant(){
  const {api}=useSession();
  const {selected,currentPhase,daysSince}=useOperation();
  const {pathname}=useLocation();
+ const navigate=useNavigate();
  const [open,setOpen]=useState(false);
  const [messages,setMessages]=useState<Message[]>([]);
  const [conversation,setConversation]=useState('');
@@ -151,6 +152,7 @@ export function ClaraAssistant(){
  }
  function showEmergency(){
   setOpen(true);setEmergency(true);stopMic();greetingActive.current=false;
+  navigate('/emergency?activate=1');
   if('speechSynthesis' in window)window.speechSynthesis.cancel();
   setSpeaking(false);
   setVoiceStatus('Emergency guidance opened. No emergency call is placed.');
