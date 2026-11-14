@@ -35,10 +35,12 @@ it('sends wake-phrase questions, opens guidance, and stops on permission denial'
 it('reads only new replies after explicit speech opt-in',async()=>{
  const speak=vi.fn();vi.stubGlobal('speechSynthesis',{speak,cancel:vi.fn()});
  vi.stubGlobal('SpeechSynthesisUtterance',class {constructor(public text:string){}});
- const {rerender}=render(<ChartVoice onQuestion={vi.fn()} latestReply="Old history"/>);
+ const {rerender}=render(<ChartVoice onQuestion={vi.fn()} latestReply="Old history" replyId="old"/>);
  expect(speak).not.toHaveBeenCalled();
  await userEvent.click(screen.getByRole('checkbox',{name:'Read new replies aloud'}));
  expect(speak).not.toHaveBeenCalled();
- rerender(<ChartVoice onQuestion={vi.fn()} latestReply="New reply"/>);
+ rerender(<ChartVoice onQuestion={vi.fn()} latestReply="New reply" replyId="first"/>);
  expect(speak).toHaveBeenCalledOnce();
+ rerender(<ChartVoice onQuestion={vi.fn()} latestReply="New reply" replyId="second"/>);
+ expect(speak).toHaveBeenCalledTimes(2);
 });

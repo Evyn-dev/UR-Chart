@@ -10,21 +10,21 @@ type Recognizer={
 type SpeechWindow=Window & {SpeechRecognition?:new()=>Recognizer;webkitSpeechRecognition?:new()=>Recognizer};
 
 /** Explicit browser voice controls; the emergency phrase only opens guidance. */
-export function ChartVoice({onQuestion,latestReply,busy=false}:{onQuestion:(text:string)=>void;latestReply:string;busy?:boolean}){
+export function ChartVoice({onQuestion,latestReply,replyId=latestReply,busy=false}:{onQuestion:(text:string)=>void;latestReply:string;replyId?:string;busy?:boolean}){
  const [listening,setListening]=useState(false);const [spoken,setSpoken]=useState(false);
  const [status,setStatus]=useState('Voice off');const [emergency,setEmergency]=useState(false);
  const recognizer=useRef<Recognizer|null>(null);const awaiting=useRef(false);
  const callback=useRef(onQuestion);callback.current=onQuestion;
  const busyRef=useRef(busy);busyRef.current=busy;
- const lastSpoken=useRef(latestReply);
+ const lastSpoken=useRef(replyId);
  const supportsOutput=typeof window.speechSynthesis!=='undefined'&&typeof window.SpeechSynthesisUtterance!=='undefined';
  useEffect(()=>{
-  if(latestReply===lastSpoken.current)return;
-  lastSpoken.current=latestReply;
+  if(replyId===lastSpoken.current)return;
+  lastSpoken.current=replyId;
   if(!spoken||!latestReply||!supportsOutput)return;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(new SpeechSynthesisUtterance(latestReply.slice(0,1500)));
- },[latestReply,spoken,supportsOutput]);
+ },[latestReply,replyId,spoken,supportsOutput]);
  useEffect(()=>()=>{
   const current=recognizer.current;
   if(current){current.onresult=null;current.onend=null;current.onerror=null;current.stop()}
