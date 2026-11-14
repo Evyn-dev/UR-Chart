@@ -15,7 +15,7 @@ from sqlalchemy import select
 from app.auth import current_patient, get_db
 from app.models import (
     Patient, Medication, MedicationLog, Checkin, RecoveryPlan, CaregiverRelationship,
-    EmergencyContact, EmergencyEvent, CaregiverNote, PatientAppointment,
+    EmergencyContact, EmergencyEvent, CaregiverNote, PatientAppointment, EmergencyMedicalCard,
 )
 from app.services import summaries
 
@@ -56,6 +56,43 @@ class AppointmentInput(Strict):
     place: str | None = Field(default=None, max_length=180)
     notes: str | None = Field(default=None, max_length=500)
 
+
+
+class MedicalCardInput(Strict):
+    allergies: list[str] = Field(default_factory=list, max_length=15)
+    conditions: list[str] = Field(default_factory=list, max_length=15)
+    note: str | None = Field(default=None, max_length=700)
+
+
+def clean_card(body):
+    if any(not item.strip() or len(item) > 80 for item in body.allergies + body.conditions):
+        raise HTTPException(422, "Medical card entries must contain 1–80 characters")
+    return {"allergies": [item.strip() for item in body.allergies],
+            "conditions": [item.strip() for item in body.conditions], "note": body.note}
+
+
+@router.get("/medical-card")
+def medical_card(patient=Depends(current_patient), db=Depends(get_db)):
+    row = db.scalar(select(EmergencyMedicalCard).where(
+        EmergencyMedicalCard.patient_id == patient.id))
+    return {"data": {"allergies": row.allergies if row else [],
+                     "conditions": row.conditions if row else [], "note": row.note if row else None,
+                     "warning": "Patient-entered or fictional data; not verified by a clinician."}}
+
+
+@router.post("/medical-card")
+def update_medical_card(body: MedicalCardInput, patient=Depends(current_patient), db=Depends(get_db)):
+    row = db.scalar(select(EmergencyMedicalCard).where(
+        EmergencyMedicalCard.patient_id == patient.id))
+    if row is None:
+        row = EmergencyMedicalCard(patient_id=patient.id)
+        db.add(row)
+    data = clean_card(body)
+    row.allergies = data["allergies"]
+    row.conditions = data["conditions"]
+    row.note = data["note"]
+    db.commit()
+    return {"data": {**data, "warning": "Patient-entered data; not verified by a clinician."}}
 
 def public_contact(row):
     return {"relationship_id": row.relationship_id, "priority": row.priority,
