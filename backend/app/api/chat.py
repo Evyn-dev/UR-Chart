@@ -8,6 +8,7 @@ from app.models import Conversation, Message, RecoveryPlan, Medication, Medicati
 from app.schemas import Data, ChatCreate, ChatOut, ConversationOut, ConversationDetail
 from app.services.records import owned, listing
 from app.services.ai import PatientContext, AIUnavailable, respond
+from app.services.medlineplus import find_references
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -71,7 +72,8 @@ def message(body: ChatCreate, request: Request, patient=Depends(current_patient)
         } for a in alerts],
     }, default=str)
     try:
-        answer = respond(request.app.state.ai, body.message, PatientContext(tuple(instructions), snapshot), history)
+        references = find_references(body.message)
+        answer = respond(request.app.state.ai, body.message, PatientContext(tuple(instructions), snapshot, references), history)
     except AIUnavailable:
         raise HTTPException(503, "AI service unavailable; no messages saved") from None
     if conversation is None:
