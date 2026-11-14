@@ -10,6 +10,7 @@ class AIUnavailable(Exception):
 @dataclass(frozen=True)
 class PatientContext:
     approved_instructions: tuple[str, ...]
+    patient_snapshot: str = ""
 
 
 class AIProvider(Protocol):
@@ -30,6 +31,9 @@ class ApprovedInstructionsProvider:
 
 
 def build_provider(settings) -> AIProvider:
+    if settings.ai_provider == "ollama":
+        from app.services.local_recovery import OllamaRecoveryProvider
+        return OllamaRecoveryProvider(settings.local_ai_model)
     if settings.ai_provider == "approved_instructions":
         return ApprovedInstructionsProvider()
     return DisabledProvider()
