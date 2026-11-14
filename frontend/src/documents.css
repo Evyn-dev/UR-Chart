@@ -1,0 +1,29 @@
+/* Shared document library — consistent with existing UR Chart design. */
+.docs-page{max-width:1080px;margin:0 auto;padding-bottom:36px}
+.docs-page .page-intro{margin-bottom:18px}
+.docs-notice{display:flex;align-items:flex-start;gap:10px;background:#eaf4f9;border:1px solid #c9dfe9;color:#264d65;padding:13px 16px;border-radius:13px;margin:15px 0;line-height:1.5;font-size:13px}
+.docs-notice svg{flex-shrink:0;margin-top:1px}
+.docs-panel{background:#fff;border:1px solid #dce8ef;border-radius:17px;box-shadow:0 4px 20px #183f5e12;padding:clamp(17px,3vw,26px);margin:16px 0;color:#17304a}
+.docs-panel h2{display:flex;align-items:center;gap:10px;font-size:20px;margin:0 0 10px;color:#17304a}
+.docs-panel h2 svg{color:#168a98}
+.docs-panel p{color:#526c80}
+.docs-form{display:grid;gap:13px;max-width:570px;margin-top:18px}
+.docs-form label{color:#344f65}
+.docs-form input,.docs-form select{background:#fff;border-color:#b9cbd6;color:#17304a;margin-top:6px}
+.docs-form .btn{justify-self:start;display:flex;align-items:center;gap:8px;min-height:44px}
+.docs-form .btn.primary{background:#2168a5;border-color:#2168a5;color:#fff}
+.docs-form small{color:#526c80}
+.docs-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.docs-header .btn{display:flex;gap:7px;align-items:center}
+.docs-list{display:grid;gap:10px}
+.docs-item{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:15px;border:1px solid #dce8ef;border-radius:12px;background:#f8fbfd}
+.docs-icon{background:#e0f1f5;color:#117482;border-radius:10px;width:42px;height:42px;display:flex;align-items:center;justify-content:center}
+.docs-detail{flex:1 1 220px;min-width:0;display:grid;gap:4px}
+.docs-detail strong{color:#17304a;overflow-wrap:anywhere}
+.docs-detail span{color:#526c80;font-size:12px;line-height:1.35}
+.docs-actions{display:flex;flex-wrap:wrap;gap:6px}
+.docs-actions .btn,.docs-header .btn{display:inline-flex;align-items:center;gap:6px;justify-content:center;background:#eaf3fa;border:1px solid #bfdae8;color:#175d88;padding:9px 12px;border-radius:10px;font-weight:650;font-size:12px}
+.docs-actions .btn:hover,.docs-header .btn:hover{background:#d9ecf8}
+.docs-feedback{padding:12px 15px;background:#e6f5ee;color:#165f4a;border:1px solid #b5dbcb;border-radius:11px}
+.docs-feedback.docs-error{background:#fff0f0;color:#953b3b;border-color:#edc0c0}
+@media(max-width:600px){.docs-actions{width:100%}.docs-actions .btn{flex:1 1 auto}.docs-panel{padding:15px}}
