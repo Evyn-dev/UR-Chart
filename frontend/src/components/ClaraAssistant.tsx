@@ -199,7 +199,7 @@ export function ClaraAssistant(){
  function tapMic(){
   const r=recognizer.current;
   if(!r){setVoiceStatus('Speech recognition unavailable. Please type your question.');return}
-  if(direct.current||awaitingWake.current){
+  if(direct.current){
    stopMic();greetingActive.current=false;
    if('speechSynthesis' in window)window.speechSynthesis.cancel();
    setSpeaking(false);setVoiceStatus('Microphone off. Tap to speak again.');return;
