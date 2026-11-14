@@ -33,9 +33,9 @@ export function FeaturesPage({guest=false}:{guest?:boolean}){
     <div className="feature-heading">
       <div className="eyebrow dark">EXPLORE UR CHART</div>
       <h1>All your recovery tools, <span>in one place.</span></h1>
-      <p>Explore what's built for our synthetic cardiovascular recovery demonstration. Sign in to use connected tools after the demo API is configured.</p>
+      <p>Explore what's built for our synthetic cardiovascular recovery demonstration. Enter the shared demo code to explore connected tools. Appointments and direct care-team messaging remain unavailable.</p>
     </div>
-    <div className="feature-important" role="note"><LockKeyhole size={20}/><div><strong>Educational demonstration only.</strong> Not for actual patient information, real clinical decisions, or emergency monitoring. Sign in with your Supabase demo account to use implemented features. This is not clinical software.</div></div>
+    <div className="feature-important" role="note"><LockKeyhole size={20}/><div><strong>Educational demonstration only.</strong> Not for actual patient information, real clinical decisions, or emergency monitoring. Enter the shared demo code and choose Patient or Caregiver. No email is required. This is not clinical software.</div></div>
     {(['Track recovery','Care and support','Your account'] as const).map(category=><section key={category} className="feature-group" aria-label={category}>
       <h2>{category}</h2>
       <div className="feature-grid">
