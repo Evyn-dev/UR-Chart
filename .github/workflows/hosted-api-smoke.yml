@@ -31,12 +31,16 @@ jobs:
               response=json.load(stream)
           data=response.get("data",{})
           assert data.get("status")=="ok", f"Unexpected health status: {data.get('status')!r}"
-          assert data.get("authentication")=="supabase", f"Unexpected authentication configuration: {data.get('authentication')!r}"
-          print("Hosted API health confirmed with Supabase Auth")
+          assert data.get("authentication")=="demo", f"Unexpected authentication configuration: {data.get('authentication')!r}"
+          print("Hosted API health confirmed with server-verified demo code")
           PY
           code=$(curl --max-time 20 --silent --show-error --output /tmp/unauth.json --write-out "%{http_code}" "$url/api/patients/me" || true)
           echo "Unauthenticated patient request: HTTP $code"
           test "$code" = "401"
+          wrong=$(curl --max-time 20 --silent --show-error --output /tmp/invalid.json --write-out "%{http_code}" \
+            -H 'Authorization: Bearer invalid-demo-code:patient' "$url/api/patients/me" || true)
+          echo "Invalid demo code request: HTTP $wrong"
+          test "$wrong" = "401"
       - name: Verify browser CORS preflight from the deployed frontend
         shell: bash
         run: |
