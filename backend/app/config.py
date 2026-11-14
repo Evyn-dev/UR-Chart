@@ -13,7 +13,6 @@ class Settings(BaseSettings):
     supabase_publishable_key: str = ""
     allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
     demo_auth_enabled: bool = False
-    one_click_demo_enabled: bool = False
     presentation_demo_enabled: bool = False
     hosted_demo_code_hash: str = ""
     demo_tokens: dict[str, str] = {}
