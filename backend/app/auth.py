@@ -32,9 +32,12 @@ def authenticated_identity(settings, credentials):
 
     if settings.hosted_demo_code_hash:
         # One shared, fictional demo patient. Never accept real medical data.
-        digest = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        supplied_code, separator, persona = token.rpartition(":")
+        if not separator or persona not in {"patient", "caregiver"}:
+            supplied_code, persona = token, "patient"
+        digest = hashlib.sha256(supplied_code.encode("utf-8")).hexdigest()
         if secrets.compare_digest(digest, settings.hosted_demo_code_hash):
-            return "synthetic-demo-patient"
+            return "synthetic-demo-caregiver" if persona == "caregiver" else "synthetic-demo-patient"
         raise HTTPException(401, "Invalid demo access code", headers={"WWW-Authenticate": "Bearer"})
 
     if settings.supabase_url and settings.supabase_publishable_key:
