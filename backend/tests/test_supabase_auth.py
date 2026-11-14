@@ -63,3 +63,47 @@ def test_auth_outage_fails_closed(monkeypatch):
 def test_all_demo_authentication_is_forbidden_in_production(demo_settings):
     with pytest.raises(ValueError, match="demo authentication"):
         Settings(_env_file=None, app_env="production", **demo_settings)
+
+
+def test_caregiver_identity_uses_server_only_supabase_admin_key(monkeypatch):
+    from app.services.caregivers import verify_caregiver_identity
+    settings_value = Settings(
+        _env_file=None, app_env="production",
+        supabase_url="https://example.supabase.co",
+        supabase_publishable_key="publishable",
+        supabase_service_role_key="server-only-secret",
+        redis_url="redis://localhost:6379/0",
+    )
+    def fake_get(url, headers, timeout):
+        assert url == "https://example.supabase.co/auth/v1/admin/users/" + USER_ID
+        assert headers["apikey"] == "server-only-secret"
+        assert headers["Authorization"] == "Bearer server-only-secret"
+        return Mock(status_code=200, json=lambda: {"id": USER_ID})
+    monkeypatch.setattr(httpx, "get", fake_get)
+    assert verify_caregiver_identity(settings_value, "supabase:" + USER_ID) is None
+
+
+def test_caregiver_identity_rejects_non_supabase_ids_without_network():
+    from app.services.caregivers import verify_caregiver_identity
+    settings_value = Settings(
+        _env_file=None, app_env="production",
+        supabase_url="https://example.supabase.co",
+        supabase_publishable_key="publishable",
+        supabase_service_role_key="server-only-secret",
+        redis_url="redis://localhost:6379/0",
+    )
+    with pytest.raises(HTTPException) as exc:
+        verify_caregiver_identity(settings_value, "synthetic-caregiver")
+    assert exc.value.status_code == 422
+
+
+def test_production_requires_shared_rate_limiter_and_supabase_admin_key():
+    with pytest.raises(ValueError, match="Production requires Supabase"):
+        Settings(_env_file=None, app_env="production",
+                 supabase_url="https://example.supabase.co",
+                 supabase_publishable_key="publishable")
+    with pytest.raises(ValueError, match="Redis URL"):
+        Settings(_env_file=None, app_env="production",
+                 supabase_url="https://example.supabase.co",
+                 supabase_publishable_key="publishable",
+                 supabase_service_role_key="server-only-secret")
