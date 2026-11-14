@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, time
 from typing import Generic, TypeVar, Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -68,6 +68,9 @@ class MedicationCreate(Input):
     dosage: str = Field(min_length=1, max_length=200)
     schedule: str = Field(min_length=1, max_length=300)
     active: bool = True
+    reminder_times: list[time] = Field(default_factory=list, max_length=12)
+    supply_remaining: int | None = Field(default=None, ge=0)
+    refill_threshold: int | None = Field(default=None, ge=0)
 
 
 class MedicationPatch(Input):
@@ -75,6 +78,9 @@ class MedicationPatch(Input):
     dosage: str | None = Field(default=None, min_length=1, max_length=200)
     schedule: str | None = Field(default=None, min_length=1, max_length=300)
     active: bool | None = None
+    reminder_times: list[time] | None = Field(default=None, max_length=12)
+    supply_remaining: int | None = Field(default=None, ge=0)
+    refill_threshold: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
     def reject_null(self):
@@ -88,6 +94,9 @@ class MedicationOut(RecordOut):
     dosage: str
     schedule: str
     active: bool
+    reminder_times: list[time]
+    supply_remaining: int | None
+    refill_threshold: int | None
 
 
 class LogCreate(Input):
@@ -117,12 +126,25 @@ class CheckinCreate(Input):
     day: date
     wellbeing: int = Field(ge=1, le=5)
     note: str | None = Field(default=None, max_length=2000)
+    pain_level: int | None = Field(default=None, ge=0, le=10)
+    symptoms: list[str] = Field(default_factory=list, max_length=20)
+    activity_minutes: int | None = Field(default=None, ge=0, le=1440)
+
+    @field_validator("symptoms")
+    @classmethod
+    def validate_symptoms(cls, value):
+        if any(not symptom.strip() or len(symptom) > 120 for symptom in value):
+            raise ValueError("Each symptom must contain 1–120 characters")
+        return value
 
 
 class CheckinOut(RecordOut):
     day: date
     wellbeing: int
     note: str | None
+    pain_level: int | None
+    symptoms: list[str]
+    activity_minutes: int | None
 
 
 class AlertCreate(Input):
@@ -158,3 +180,19 @@ class ChatOut(BaseModel):
     conversation_id: UUID
     user_message: MessageOut
     assistant_message: MessageOut
+
+
+class MedicationAdherence(BaseModel):
+    taken: int
+    skipped: int
+    total_logged: int
+    adherence_percent: float | None
+    note: str = "Based on logged dose events only; not scheduled-dose adherence."
+
+
+class RefillStatus(BaseModel):
+    medication_id: UUID
+    supply_remaining: int | None
+    refill_threshold: int | None
+    refill_needed: bool | None
+    note: str = "Supply is entered manually; this is not a pharmacy refill request."
