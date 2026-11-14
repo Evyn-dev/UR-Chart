@@ -25,12 +25,13 @@ describe('caregiver summary access',()=>{
  it.each([403,404])('clears previously viewed data when access returns %s',async status=>{
   const request=vi.fn().mockResolvedValueOnce(ok(dashboard)).mockResolvedValueOnce(denied(status));
   mount(request);const user=userEvent.setup();
-  const view=await screen.findByRole('button',{name:'View allowed summary'});
+  const view=await screen.findByRole('button',{name:"Open patient's chart"});
   await user.click(view);
-  expect(await screen.findByText(/Private summary content/)).toBeInTheDocument();
-  await user.click(view);
+  expect(await screen.findByRole('heading',{name:/Private summary content's shared patient chart/})).toBeInTheDocument();
+  await user.click(screen.getByRole('button',{name:'Close patient chart'}));
+  await user.click(screen.getByRole('button',{name:"Open patient's chart"}));
   expect(await screen.findByText('Access no longer available')).toBeInTheDocument();
-  expect(screen.queryByText(/Private summary content/)).not.toBeInTheDocument();
+  expect(screen.queryByRole('heading',{name:/Private summary content's shared patient chart/})).not.toBeInTheDocument();
  });
 
  it('does not restore a late successful response after a newer access denial',async()=>{
@@ -38,11 +39,13 @@ describe('caregiver summary access',()=>{
   const oldRequest=new Promise(resolve=>{resolveOld=resolve});
   const request=vi.fn().mockReturnValueOnce(oldRequest).mockResolvedValueOnce(denied(404));
   mount(request);const user=userEvent.setup();
-  const view=await screen.findByRole('button',{name:'View allowed summary'});
-  await user.click(view);await user.click(view);
+  const view=await screen.findByRole('button',{name:"Open patient's chart"});
+  await user.click(view);
+  await user.click(screen.getByRole('button',{name:'Close patient chart'}));
+  await user.click(screen.getByRole('button',{name:"Open patient's chart"}));
   await waitFor(()=>expect(request).toHaveBeenCalledTimes(2));
   expect(await screen.findByText('Access no longer available')).toBeInTheDocument();
   await act(async()=>resolveOld(ok(dashboard)));
-  expect(screen.queryByText(/Private summary content/)).not.toBeInTheDocument();
+  expect(screen.queryByRole('heading',{name:/Private summary content's shared patient chart/})).not.toBeInTheDocument();
  });
 });
