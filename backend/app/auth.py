@@ -19,11 +19,13 @@ def get_db(request: Request):
 
 def authenticated_identity(settings, credentials):
     """Verify bearer tokens server-side, never from unverified JWT claims."""
-    if not (settings.demo_auth_enabled or settings.hosted_demo_code_hash or (settings.supabase_url and settings.supabase_publishable_key)):
+    if not (settings.presentation_demo_enabled or settings.demo_auth_enabled or settings.hosted_demo_code_hash or (settings.supabase_url and settings.supabase_publishable_key)):
         raise HTTPException(503, "Authentication provider not configured")
     if not credentials:
         raise HTTPException(401, "Valid bearer token required", headers={"WWW-Authenticate": "Bearer"})
     token = credentials.credentials
+    if settings.presentation_demo_enabled and token in {"urchart-presentation:patient", "urchart-presentation:caregiver"}:
+        return "synthetic-demo-caregiver" if token.endswith(":caregiver") else "synthetic-demo-patient"
     if settings.demo_auth_enabled:
         # In development only, role-suffixed demo credentials let the same
         # fictional access code open a separate caregiver identity.
