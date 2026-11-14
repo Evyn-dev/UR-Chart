@@ -2,6 +2,8 @@
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from fastapi import HTTPException
+import httpx
+from uuid import UUID
 from sqlalchemy import select, update, case
 from app.models import Patient, Checkin, Alert, CaregiverRelationship, CaregiverAudit
 from app.services import checkins, summaries
@@ -22,14 +24,50 @@ def transition(db, relationship, expected, allowed, values):
     db.refresh(relationship)
 
 
+def verify_caregiver_identity(settings, caregiver_user_id):
+    """Verify the recipient exists in Supabase using a server-only admin credential."""
+    if not settings.supabase_url or not settings.supabase_service_role_key:
+        raise HTTPException(503, "Caregiver identity verification is not configured")
+    if not caregiver_user_id.startswith("supabase:"):
+        raise HTTPException(422, "Recipient must be a verified Supabase account")
+    try:
+        user_id = str(UUID(caregiver_user_id.removeprefix("supabase:")))
+    except ValueError:
+        raise HTTPException(422, "Recipient identity is invalid") from None
+    try:
+        response = httpx.get(
+            settings.supabase_url.rstrip("/") + "/auth/v1/admin/users/" + user_id,
+            headers={
+                "apikey": settings.supabase_service_role_key,
+                "Authorization": "Bearer " + settings.supabase_service_role_key,
+            },
+            timeout=8,
+        )
+    except httpx.RequestError:
+        raise HTTPException(503, "Caregiver identity service unavailable") from None
+    if response.status_code == 404:
+        raise HTTPException(422, "Caregiver account was not found")
+    if response.status_code != 200:
+        raise HTTPException(503, "Caregiver identity service unavailable")
+    try:
+        verified_id = str(UUID(response.json()["id"]))
+    except (ValueError, TypeError, KeyError, AttributeError):
+        raise HTTPException(503, "Unexpected caregiver identity response") from None
+    if verified_id != user_id:
+        raise HTTPException(422, "Caregiver identity could not be verified")
+
+
 def invite(db, patient, body, settings):
     if body.caregiver_user_id == patient.user_id:
         raise HTTPException(422, "Cannot invite yourself")
-    valid_identities = set(settings.demo_tokens.values())
-    if settings.hosted_demo_code_hash:
-        valid_identities.add("synthetic-demo-caregiver")
-    if body.caregiver_user_id not in valid_identities:
-        raise HTTPException(422, "Recipient must be a configured demo identity")
+    if settings.supabase_url and not settings.demo_auth_enabled and not settings.hosted_demo_code_hash:
+        verify_caregiver_identity(settings, body.caregiver_user_id)
+    else:
+        valid_identities = set(settings.demo_tokens.values())
+        if settings.hosted_demo_code_hash:
+            valid_identities.add("synthetic-demo-caregiver")
+        if body.caregiver_user_id not in valid_identities:
+            raise HTTPException(422, "Recipient must be a configured demo identity")
     record = db.scalar(select(CaregiverRelationship).where(CaregiverRelationship.patient_id == patient.id,
         CaregiverRelationship.caregiver_user_id == body.caregiver_user_id))
     values = body.model_dump()
