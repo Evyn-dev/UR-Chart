@@ -15,8 +15,9 @@ class Settings(BaseSettings):
     demo_auth_enabled: bool = False
     hosted_demo_code_hash: str = ""
     demo_tokens: dict[str, str] = {}
-    ai_provider: Literal["disabled", "approved_instructions"] = "disabled"
+    ai_provider: Literal["disabled", "approved_instructions", "ollama"] = "disabled"
     ai_api_key: str = ""
+    local_ai_model: str = "llama3.2:3b"
     risk_rules_file: str | None = None
 
     @model_validator(mode="after")
