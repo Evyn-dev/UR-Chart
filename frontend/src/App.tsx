@@ -1,6 +1,6 @@
 import {useEffect,useState} from 'react';
 import {Link,Navigate,Route,Routes,useLocation} from 'react-router-dom';
-import {Activity,ArrowRight,HeartPulse,KeyRound,LockKeyhole,ShieldAlert,Users,UserRound} from 'lucide-react';
+import {Activity,ArrowRight,HeartPulse,KeyRound,ShieldAlert,Users,UserRound} from 'lucide-react';
 import {SessionProvider} from './hooks/session';
 import {createClient} from './services/client';
 import {patientsApi} from './services/patients';
@@ -21,7 +21,7 @@ function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
  async function enterDemo(role:'patient'|'caregiver'){
   setWorking(true);setError('');
   try{
-   const base=(import.meta.env.VITE_API_BASE_URL||'').replace(/\\/$/,'');
+   const base=(import.meta.env.VITE_API_BASE_URL||'').replace(/\/$/,'');
    const response=await fetch(`${base}/api/demo/session`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role}),cache:'no-store'});
    const result=await response.json().catch(()=>null);
    if(!response.ok||typeof result?.data?.token!=='string')throw new Error('One-click demo is not enabled on this server. Use the existing demo access code or ask the host to enable PUBLIC_DEMO_ENABLED=true.');
