@@ -9,7 +9,7 @@ from sqlalchemy import select
 
 from app.config import Settings
 from app.database import make_engine, session_factory
-from app.models import Patient, RecoveryPlan, Medication, MedicationLog, MedicationSchedule, Checkin, Alert
+from app.models import Patient, RecoveryPlan, Medication, MedicationLog, MedicationSchedule, Checkin, Alert, CaregiverRelationship
 from app.services.medications import replace_schedule, occurrences, utc
 
 PLACEHOLDER_PLAN = "This is fictional demonstration content. Your care team provides your recovery instructions."
@@ -205,6 +205,22 @@ def seed(settings):
                             symptoms=entry["symptoms"], symptom_reports=[], note=entry["note"],
                         ))
                 seed_sample_alert(db, patient, today)
+                # Fixed fictional role accounts only; do not grant real user access.
+                # Respect later revoke/permission edits rather than silently resetting consent.
+                if settings.presentation_demo_enabled and identity == "synthetic-demo-patient":
+                    caregiver = db.scalar(select(CaregiverRelationship).where(
+                        CaregiverRelationship.patient_id == patient.id,
+                        CaregiverRelationship.caregiver_user_id == "synthetic-demo-caregiver",
+                    ))
+                    if caregiver is None:
+                        db.add(CaregiverRelationship(
+                            patient_id=patient.id,
+                            caregiver_user_id="synthetic-demo-caregiver",
+                            status="active",
+                            permissions=["recovery_summary", "checkin_summary", "medication_adherence", "alerts"],
+                            alert_severities=["routine", "needs_clinical_review", "urgent", "emergency"],
+                            responded_at=current_time,
+                        ))
             db.commit()
     finally:
         engine.dispose()
