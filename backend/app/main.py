@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import Settings
 from app.database import Base, make_engine, session_factory
-from app.models import EmergencyContact, EmergencyEvent, CaregiverNote, PatientAppointment
+from app.models import EmergencyContact, EmergencyEvent, CaregiverNote, PatientAppointment, EmergencyMedicalCard
 from app.api import patients, medications, checkins, alerts, chat, health, caregivers, corrections, engagement
 from app.services.ai import build_provider
 from app.utils.errors import install_errors
@@ -17,7 +17,7 @@ def create_app(settings=None, engine=None, provider=None):
     # Prototype-only schema install for isolated local demo databases.
     # Production deployments require an reviewed Alembic migration before enabling these routes.
     if settings.app_env in {"development", "test"}:
-        Base.metadata.create_all(engine, tables=[EmergencyContact.__table__, EmergencyEvent.__table__, CaregiverNote.__table__, PatientAppointment.__table__], checkfirst=True)
+        Base.metadata.create_all(engine, tables=[EmergencyContact.__table__, EmergencyEvent.__table__, CaregiverNote.__table__, PatientAppointment.__table__, EmergencyMedicalCard.__table__], checkfirst=True)
 
     @asynccontextmanager
     async def lifespan(app):
