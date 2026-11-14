@@ -166,7 +166,7 @@ export function ClaraAssistant(){
     const phrase=event.results[i][0]?.transcript?.trim()||'';
     if(!phrase||greetingActive.current)continue;
     const lower=phrase.toLowerCase();
-    if(/^emergency([\s.!?,]|$)/i.test(phrase)){showEmergency();return}
+    if(/^(?:chart\s+emergency|emergency)([\s.!?,]|$)/i.test(phrase)){showEmergency();return}
     // The wake phrase and name have replaced "Chart Chart".
     const match=/\bclara\b/i.exec(phrase);
     if(match){
