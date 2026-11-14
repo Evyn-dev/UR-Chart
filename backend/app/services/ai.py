@@ -1,4 +1,5 @@
 """Provider boundary. External generators require a separately reviewed adapter."""
+import os
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -10,6 +11,7 @@ class AIUnavailable(Exception):
 @dataclass(frozen=True)
 class PatientContext:
     approved_instructions: tuple[str, ...]
+    patient_snapshot: str = "{}"
 
 
 class AIProvider(Protocol):
@@ -30,6 +32,12 @@ class ApprovedInstructionsProvider:
 
 
 def build_provider(settings) -> AIProvider:
+    if settings.ai_provider == "ollama":
+        # Localhost on Vercel is not the developer's laptop.
+        if settings.app_env != "development" or os.environ.get("VERCEL"):
+            return ApprovedInstructionsProvider()
+        from app.services.local_recovery import OllamaRecoveryProvider
+        return OllamaRecoveryProvider(settings.local_ai_model, settings.local_ai_timeout)
     if settings.ai_provider == "approved_instructions":
         return ApprovedInstructionsProvider()
     return DisabledProvider()

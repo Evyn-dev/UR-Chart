@@ -1,6 +1,6 @@
 from typing import Literal
 import re
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,8 +15,10 @@ class Settings(BaseSettings):
     demo_auth_enabled: bool = False
     hosted_demo_code_hash: str = ""
     demo_tokens: dict[str, str] = {}
-    ai_provider: Literal["disabled", "approved_instructions"] = "disabled"
+    ai_provider: Literal["disabled", "approved_instructions", "ollama"] = "disabled"
     ai_api_key: str = ""
+    local_ai_model: str = Field(default="llama3.2:3b", min_length=1, max_length=100)
+    local_ai_timeout: float = Field(default=20, gt=0, le=30)
     risk_rules_file: str | None = None
 
     @model_validator(mode="after")
