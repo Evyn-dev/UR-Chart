@@ -3,6 +3,6 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   plugins:[react(),tailwindcss()],
-  server:{host:'127.0.0.1',port:5173,proxy:{'/api':{target:'http://127.0.0.1:8000',changeOrigin:true}}},
+  server:{host:'127.0.0.1',port:5173,proxy:{'/api':{target:process.env.URCHART_DEMO_API_URL || 'https://rugs-holder-profession-him.trycloudflare.com',changeOrigin:true}}},
   test:{environment:'jsdom',setupFiles:['./src/test/setup.ts'],exclude:['node_modules/**','dist/**']}
 });

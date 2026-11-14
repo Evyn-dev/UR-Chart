@@ -1,14 +1,14 @@
 export class ApiError extends Error { constructor(message:string,public status:number){super(message);this.name='ApiError'} }
 // During development Vite proxies /api to FastAPI so the browser uses a same-origin URL.
 // A deployed frontend can set VITE_API_BASE_URL to the trusted HTTPS API origin.
-export function createClient(token:string,base=import.meta.env.VITE_API_BASE_URL || '') {
+export function createClient(token:string,base='') {
   return async function request<T>(path:string,method='GET',body?:unknown,signal?:AbortSignal):Promise<T> {
     let response:Response;
     try {
       response=await fetch(`${base.replace(/\/$/,'')}/api${path}`,{method,signal,cache:'no-store',headers:{Authorization:`Bearer ${token}`,...(body!==undefined?{'Content-Type':'application/json'}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});
     } catch(e) {
       if(e instanceof DOMException && e.name==='AbortError')throw e;
-      throw new ApiError('Cannot reach your recovery service. Check that FastAPI is running.',0);
+      throw new ApiError('Cannot reach your recovery service. Check that the demo API tunnel is running.',0);
     }
     const payload=await response.json().catch(()=>null);
     if(!response.ok){
