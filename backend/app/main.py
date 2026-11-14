@@ -7,6 +7,7 @@ from app.api import patients, medications, checkins, alerts, chat, health, careg
 from app.services.ai import build_provider
 from app.utils.errors import install_errors
 from app.schemas import ErrorResponse
+from app.rate_limit import RateLimitMiddleware
 
 
 def create_app(settings=None, engine=None, provider=None):
@@ -23,6 +24,7 @@ def create_app(settings=None, engine=None, provider=None):
     app.state.sessions = session_factory(engine)
     app.state.ai = provider or build_provider(settings)
     app.add_middleware(CORSMiddleware, allow_origins=settings.allowed_origins, allow_credentials=False, allow_methods=["GET", "POST", "PATCH"], allow_headers=["Authorization", "Content-Type"])
+    app.add_middleware(RateLimitMiddleware, redis_url=settings.redis_url, general_limit=settings.api_rate_limit_per_minute, sensitive_limit=settings.sensitive_rate_limit_per_minute, invite_limit=settings.caregiver_invites_per_hour)
     install_errors(app)
     for module in (patients, medications, checkins, alerts, chat, health, caregivers, corrections):
         app.include_router(module.router, prefix="/api", responses={status: {"model": ErrorResponse} for status in (401, 403, 404, 409, 422, 500, 503)})
