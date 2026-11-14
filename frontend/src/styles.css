@@ -67,3 +67,55 @@
 @keyframes chartVoiceGlow{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.7)}}
 @media(max-width:540px){.chart-voice-fab{width:59px;height:59px;border-radius:19px;bottom:17px;right:15px}.chart-voice-hint>span:first-child{min-width:180px}}
 @media(prefers-reduced-motion:reduce){.chart-voice-fab,.chart-voice-fab-indicator{animation:none;transition:none}}
+
+
+/* Clara: responsive floating chat that follows the user across authenticated pages. */
+.clara-launcher{position:fixed;z-index:80;right:clamp(14px,3vw,34px);bottom:clamp(16px,3vw,30px);display:flex;align-items:center;gap:9px;padding:15px 19px;border:2px solid #fff;border-radius:20px;background:#6d5cc4;color:white;font-weight:800;box-shadow:0 12px 32px #32246955;transition:transform .16s,box-shadow .16s}
+.clara-launcher:hover{transform:translateY(-3px);box-shadow:0 16px 34px #32246966}
+.clara-launcher:focus-visible,.clara-window button:focus-visible{outline:3px solid #48b4b1;outline-offset:3px}
+.clara-window{position:fixed;z-index:85;right:clamp(12px,2.8vw,31px);bottom:clamp(12px,2vw,25px);width:min(430px,calc(100vw - 24px));height:min(660px,calc(100dvh - 28px));min-height:330px;background:white;border:1px solid #dedff0;border-radius:22px;box-shadow:0 18px 60px #202a4655;display:flex;flex-direction:column;overflow:hidden}
+.clara-header{display:flex;align-items:center;gap:10px;flex-shrink:0;background:linear-gradient(120deg,#6957bd,#8270d3);color:white;padding:13px}
+.clara-mark{display:grid;place-items:center;width:39px;height:39px;background:#ffffff24;border-radius:13px;flex-shrink:0}
+.clara-heading{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.clara-heading strong{font-size:17px;line-height:1.2}
+.clara-heading span{font-size:10px;color:#edeafd}
+.clara-icon-btn{display:grid;place-items:center;width:29px;height:32px;padding:0;background:transparent;border:0;color:white;border-radius:8px;flex-shrink:0}
+.clara-icon-btn:hover{background:#ffffff24}
+.clara-toolbar{display:flex;gap:6px;padding:9px 11px;border-bottom:1px solid #e9eaf4;flex-shrink:0}
+.clara-toolbar button{display:flex;align-items:center;gap:5px;padding:7px 9px;font-size:11px;font-weight:750;border:1px solid #eceaf7;background:#f9f7ff;color:#5c519c;border-radius:9px}
+.clara-toolbar button.clara-safety-link{margin-left:auto;background:#fff1f1;border-color:#ffe1e1;color:#b33847}
+.clara-history{max-height:158px;overflow:auto;padding:8px 12px;border-bottom:1px solid #e7e7ee;display:grid;gap:4px;background:#fafbff}
+.clara-history button{border:0;border-radius:8px;background:transparent;text-align:left;padding:9px;color:#56607c;font-size:12px}
+.clara-history button:hover,.clara-history button.current{background:#eae7f9}
+.clara-history p{font-size:12px;margin:8px;color:#68768a}
+.clara-chat-scroll{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:15px 14px}
+.clara-welcome{text-align:center;margin:auto 0;padding:18px 12px;color:#52607a}
+.clara-welcome-icon{margin:0 auto 10px;display:grid;place-items:center;width:55px;height:55px;border-radius:18px;background:#f0eafb;color:#7361c7}
+.clara-welcome h3{font-size:18px;color:#252e51;margin:0 0 9px}
+.clara-welcome p{font-size:12px;margin-bottom:18px}
+.clara-welcome button{border:1px solid #ddd8f4;background:#f6f3ff;border-radius:12px;color:#6954b0;padding:10px 12px;font-size:12px;font-weight:700}
+.clara-message{max-width:91%;border-radius:15px;padding:11px 13px;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.clara-message span{display:block;font-size:10px;opacity:.73;margin-bottom:5px}
+.clara-message p{margin:0;line-height:1.62}
+.clara-user{align-self:flex-end;background:#6d5bc0;color:#fff;border-bottom-right-radius:5px}
+.clara-reply{align-self:flex-start;background:#f0f2f8;color:#26334e;border-bottom-left-radius:5px}
+.clara-chat-scroll .assistant-activity{margin:0;gap:9px;padding:9px;font-size:11px;min-height:59px}
+.clara-chat-scroll .assistant-ecg{width:82px;height:40px}
+.clara-chat-scroll .assistant-heart{width:48px;height:40px}
+.clara-chat-scroll .assistant-activity strong{font-size:11px}
+.clara-chat-scroll .assistant-activity p{font-size:10px}
+.clara-voice-info{padding:4px 14px 8px;font-size:10px;color:#7a8195;flex-shrink:0}
+.clara-compose{display:flex;align-items:center;gap:8px;padding:10px 12px 7px;border-top:1px solid #edf0f6;flex-shrink:0}
+.clara-compose input{flex:1;min-width:0;min-height:43px;padding:10px 12px;font-size:12px}
+.clara-mic,.clara-send{height:42px;width:42px;flex-shrink:0;display:grid;place-items:center;border:0;border-radius:12px;background:#efeafd;color:#6a57ba}
+.clara-mic.is-listening{background:#d13e57;color:white;animation:assistantHeartBeat 1.2s ease-in-out infinite}
+.clara-send{background:#725fc1;color:white}
+.clara-send:disabled{background:#b7b0d8;color:#fff}
+.clara-footer{text-align:center;font-size:9px;color:#8993a8;padding:0 9px 9px;flex-shrink:0}
+.clara-error{margin:0 12px 8px;padding:10px;border-radius:9px;background:#fff1f1;color:#9d2939;font-size:11px}
+.clara-emergency{padding:12px 14px;background:#fff0ef;border-bottom:1px solid #f3c4c2;font-size:12px;color:#792831}
+.clara-emergency strong{display:block;margin-bottom:5px}
+.clara-emergency p{font-size:11px;margin:0 0 8px}
+.clara-emergency button{padding:5px 9px;border:1px solid #e3b0b0;background:white;border-radius:7px;font-size:11px;color:#982f3c}
+@media(max-width:500px){.clara-launcher{right:15px;bottom:15px;padding:14px 17px}.clara-window{right:0;bottom:0;width:100vw;height:min(100dvh,720px);border-radius:19px 19px 0 0}.clara-header{padding:11px 12px}}
+@media(prefers-reduced-motion:reduce){.clara-launcher,.clara-mic.is-listening{animation:none;transition:none}}
