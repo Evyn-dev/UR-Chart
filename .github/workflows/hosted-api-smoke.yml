@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/hosted-api-smoke.yml'
+      - 'backend/**'
 
 permissions:
   contents: read
