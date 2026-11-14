@@ -41,7 +41,8 @@ export function DocumentsPage(){
   const next=e.target.files?.[0]||null;
   setError('');setNotice('');
   if(!next){setFile(null);return}
-  if(!mimeTypes.has(next.type)){setError('Upload PDF, PNG, JPG, or UTF-8 TXT files only.');setFile(null);return}
+  const detected=next.type||({'pdf':'application/pdf','png':'image/png','jpg':'image/jpeg','jpeg':'image/jpeg','txt':'text/plain'}[next.name.split('.').pop()?.toLowerCase()||'']||'');
+  if(!mimeTypes.has(detected)){setError('Upload PDF, PNG, JPG, or UTF-8 TXT files only.');setFile(null);return}
   if(next.size>MAX_BYTES){setError('Files must be 3 MB or smaller.');setFile(null);return}
   setFile(next);
  }
