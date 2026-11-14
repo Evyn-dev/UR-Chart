@@ -6,7 +6,6 @@ visible to the patient and their own uploader, never every caregiver.
 No client-supplied patient ID is trusted for ownership.
 """
 from uuid import UUID
-from pathlib import PurePath
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, ConfigDict
