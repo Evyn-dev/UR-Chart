@@ -1,6 +1,6 @@
 from datetime import datetime, timezone, date
 from uuid import uuid4
-from sqlalchemy import ForeignKey, String, Text, UniqueConstraint, DateTime
+from sqlalchemy import ForeignKey, String, Text, UniqueConstraint, DateTime, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
@@ -43,6 +43,9 @@ class Medication(PatientRecord, Base):
     dosage: Mapped[str] = mapped_column(String(200))
     schedule: Mapped[str] = mapped_column(String(300))
     active: Mapped[bool] = mapped_column(default=True)
+    reminder_times: Mapped[list] = mapped_column(JSON, default=list)
+    supply_remaining: Mapped[int | None] = mapped_column(nullable=True)
+    refill_threshold: Mapped[int | None] = mapped_column(nullable=True)
     patient: Mapped[Patient] = relationship(back_populates="medications")
     logs: Mapped[list["MedicationLog"]] = relationship(back_populates="medication")
 
@@ -62,6 +65,9 @@ class Checkin(PatientRecord, Base):
     day: Mapped[date]
     wellbeing: Mapped[int]
     note: Mapped[str | None] = mapped_column(String(2000))
+    pain_level: Mapped[int | None] = mapped_column(nullable=True)
+    symptoms: Mapped[list] = mapped_column(JSON, default=list)
+    activity_minutes: Mapped[int | None] = mapped_column(nullable=True)
 
 
 class Conversation(PatientRecord, Base):
