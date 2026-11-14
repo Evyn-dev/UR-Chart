@@ -30,7 +30,7 @@ def create_app(settings=None, engine=None, provider=None):
     app.state.ai = provider or build_provider(settings)
     app.add_middleware(CORSMiddleware, allow_origins=settings.allowed_origins, allow_credentials=False, allow_methods=["GET", "POST", "PATCH"], allow_headers=["Authorization", "Content-Type"])
     install_errors(app)
-    for module in (patients, medications, checkins, alerts, chat, health, caregivers, corrections):
+    for module in (patients, medications, checkins, alerts, chat, health, caregivers, corrections, engagement):
         app.include_router(module.router, prefix="/api", responses={status: {"model": ErrorResponse} for status in (401, 403, 404, 409, 422, 500, 503)})
     return app
 
