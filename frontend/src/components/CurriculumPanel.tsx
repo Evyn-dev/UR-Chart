@@ -1,5 +1,6 @@
 import {useCallback,useEffect,useState} from 'react';
 import type {FormEvent} from 'react';
+import './CurriculumPanel.css';
 import {useSession} from '../hooks/session';
 import type {CurriculumTask,CurriculumAudit} from '../types/api';
 
