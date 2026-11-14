@@ -92,7 +92,7 @@ export default function App(){
   }
   if(sampleOpen)return <PatientSampleDemo onExit={()=>setSampleOpen(false)}/>;
   if(checking)return <div className="startup"><HeartPulse size={36}/><p>Opening your recovery space…</p></div>;
-  if(!token||!patient)return pathname==='/features'?<FeaturesPage guest/>:<DemoLogin onLogin={login} onOpenDemo={()=>setSampleOpen(true}/>;
+  if(!token||!patient)return pathname==='/features'?<FeaturesPage guest/>:<DemoLogin onLogin={login} onOpenDemo={()=>setSampleOpen(true)}/>;
   return <SessionProvider token={token} initialPatient={patient} signOut={signOut}>
     <Routes><Route element={<Shell/>}>
       <Route path="/" element={<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<AssistantPage/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
