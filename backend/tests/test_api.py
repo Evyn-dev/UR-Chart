@@ -140,6 +140,8 @@ def test_secure_defaults(database_url):
     with pytest.raises(ValueError):
         Settings(_env_file=None, app_env="production", demo_auth_enabled=True)
     with pytest.raises(ValueError):
+        Settings(_env_file=None, app_env="production", hosted_demo_code_hash="a" * 64)
+    with pytest.raises(ValueError):
         Settings(_env_file=None, allowed_origins=["*"])
 
 
