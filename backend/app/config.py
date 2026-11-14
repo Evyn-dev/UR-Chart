@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     supabase_publishable_key: str = ""
     allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
     demo_auth_enabled: bool = False
+    public_demo_enabled: bool = False
     hosted_demo_code_hash: str = ""
     demo_tokens: dict[str, str] = {}
     ai_provider: Literal["disabled", "approved_instructions", "ollama"] = "disabled"
@@ -22,6 +23,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def secure_defaults(self):
+        if self.app_env == "production" and self.public_demo_enabled:
+            raise ValueError("Public no-key demo requires isolated development/test mode")
+        if self.public_demo_enabled and not (self.demo_auth_enabled and self.demo_tokens or self.hosted_demo_code_hash):
+            raise ValueError("Public demo requires a configured synthetic demo identity and signing secret")
         if self.app_env == "production" and self.demo_auth_enabled:
             raise ValueError("Demo authentication is forbidden in production")
         if self.hosted_demo_code_hash and not re.fullmatch(r"[0-9a-f]{64}", self.hosted_demo_code_hash):
