@@ -1,0 +1,65 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UR Chart | Recovery Assistant</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101d32;color:#eef5ff}*{box-sizing:border-box}
+body{max-width:880px;margin:auto;padding:24px 15px}header{display:flex;justify-content:space-between;align-items:center;gap:16px}
+h1{margin:0;font-size:30px}h2{margin:0 0 12px;font-size:20px}.muted,small{color:#9fb5d1}
+section{background:#192b46;border:1px solid #314b6b;border-radius:16px;padding:20px;margin:18px 0}
+button,input,select,textarea{font:inherit;border-radius:9px;padding:10px;border:1px solid #557399}
+input,select,textarea{background:#12223b;color:white;width:100%;margin:6px 0 12px}
+button{background:#3582ee;color:white;cursor:pointer;border:0;margin:4px}button.secondary{background:#3a4d68}button.danger{background:#d43b48}
+.flex{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.flex>*{flex:1}
+#chatLog{min-height:110px;max-height:300px;overflow:auto;padding:8px;border-radius:10px;background:#101d32}
+.message{padding:8px 4px;border-bottom:1px solid #253955}.due{border:1px solid #e7ab51!important}
+.reminder{border:1px solid #38526f;border-radius:10px;padding:12px;margin:8px 0}
+#emergency{background:#461d28;border:2px solid #ff6e76}
+[hidden]{display:none!important}
+</style></head><body>
+<header><div><h1>♡ UR Chart</h1><div class="muted">Urgent Recovery · AI assistant demo</div></div><span>Java Module</span></header>
+<section><h2>Voice recovery assistant</h2><p>Say <strong>“Chart Chart”</strong> to begin speaking, or <strong>“Chart Emergency”</strong> for the emergency demonstration.</p>
+<button id="listen">Enable voice listening</button><span id="voiceStatus" class="muted">Voice inactive</span>
+<p id="aiStatus" class="muted">Checking AI connection...</p><div id="chatLog" aria-live="polite"></div>
+<form id="chatForm" class="flex"><input id="chatInput" aria-label="Ask UR Chart" placeholder="Ask about recovery..." required><button>Send</button></form>
+<p><small>Demo only. Not medical diagnosis or 24/7 monitoring. Always use your actual discharge instructions.</small></p></section>
+<section id="emergency" hidden><h2>🚨 Chart Emergency</h2><p>If this is a real emergency, call emergency services immediately.</p>
+<p><strong>US emergency number: 911</strong></p><p id="location">Location not requested.</p>
+<div class="flex"><button id="locate" type="button">Show my location</button><button class="secondary" id="closeEmergency" type="button">Close demo</button></div>
+<p><small>This prototype will never auto-call 911. To call, use your phone's dialer. Location is not sent to a dispatcher.</small></p></section>
+<section><h2>Custom reminders</h2><p class="muted">One-time, daily, weekdays, weekly, or monthly. Alerts work only while this tab and server are running.</p>
+<form id="reminderForm"><label>Reminder title<input id="title" maxlength="120" required placeholder="Drink water"></label>
+<label>Notes<textarea id="notes" maxlength="500" rows="2"></textarea></label>
+<div class="flex"><label>When<input id="when" type="datetime-local" required></label><label>Repeat<select id="repeat"><option value="once">Once</option><option value="daily">Daily</option><option value="weekdays">Weekdays</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></label></div>
+<button type="submit">Add reminder</button><button id="notify" type="button" class="secondary">Enable notifications</button></form>
+<p id="reminderStatus" aria-live="polite" class="muted"></p><div id="reminders"></div></section>
+<script>
+const $=id=>document.getElementById(id);
+const API='/api/assistant',fired=new Set();let reminders=[],recognizer,voiceOn=false,assistantMode=false,emergencyOpen=false;
+const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
+function append(who,text){const div=document.createElement('div');div.className='message';div.textContent=who+': '+text;$('chatLog').append(div);$('chatLog').scrollTop=$('chatLog').scrollHeight;}
+function speak(s){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(s);u.rate=.95;speechSynthesis.speak(u)}catch(e){}}
+async function post(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json();if(!r.ok)throw Error(data.error||'Request failed');return data;}
+async function send(message){append('You',message);try{const d=await post(API+'/chat',{message});append('Chart',d.reply);speak(d.reply);if(d.risk==='emergency')openEmergency();}catch(e){append('System',e.message);}}
+$('chatForm').onsubmit=e=>{e.preventDefault();const msg=$('chatInput').value.trim();if(!msg)return;$('chatInput').value='';send(msg)};
+function openEmergency(){emergencyOpen=true;$('emergency').hidden=false;$('emergency').scrollIntoView({behavior:'smooth'});speak('Emergency mode activated. If this is a real emergency, call 911 now in the United States.');}
+$('closeEmergency').onclick=()=>{emergencyOpen=false;$('emergency').hidden=true};
+$('locate').onclick=()=>{if(!navigator.geolocation){$('location').textContent='Location unavailable.';return}navigator.geolocation.getCurrentPosition(p=>{$('location').textContent='Coordinates: '+p.coords.latitude.toFixed(5)+', '+p.coords.longitude.toFixed(5)+' (tell dispatcher manually)'},()=>{$('location').textContent='Location permission denied or unavailable.'},{enableHighAccuracy:true,timeout:8000})};
+$('listen').onclick=()=>{
+ if(!SpeechRec){$('voiceStatus').textContent='Speech recognition unsupported; use text.';return}
+ if(voiceOn){voiceOn=false;recognizer.stop();$('voiceStatus').textContent='Voice stopped';$('listen').textContent='Enable voice listening';return}
+ recognizer=new SpeechRec();recognizer.continuous=true;recognizer.interimResults=false;recognizer.lang='en-US';voiceOn=true;
+ recognizer.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){const phrase=e.results[i][0].transcript.trim();const lower=phrase.toLowerCase();
+ if(lower.includes('chart emergency')){assistantMode=false;openEmergency();return}
+ if(lower.includes('chart chart')){assistantMode=true;$('voiceStatus').textContent='Chart awake — ask your question';speak('How can I help?');const after=phrase.substring(lower.indexOf('chart chart')+11).trim();if(after)send(after);return}
+ if(assistantMode){assistantMode=false;send(phrase)}
+ }};
+ recognizer.onerror=e=>{$('voiceStatus').textContent='Microphone: '+e.error};
+ recognizer.onend=()=>{if(voiceOn){try{recognizer.start()}catch(e){$('voiceStatus').textContent='Voice stopped. Click to re-enable.';voiceOn=false}}};
+ recognizer.start();$('voiceStatus').textContent='Listening for Chart Chart / Chart Emergency';$('listen').textContent='Stop voice';
+};
+function due(item){if(!item.enabled||item.nextAt>Date.now())return;const key=item.id+':'+item.nextAt;if(fired.has(key))return;fired.add(key);$('reminderStatus').textContent='🔔 Due: '+item.title;if('Notification'in window&&Notification.permission==='granted')new Notification('UR Chart reminder: '+item.title,{body:item.notes||'Reminder due'});}
+function render(){const list=$('reminders');list.replaceChildren();if(!reminders.length){list.textContent='No reminders yet';return}for(const item of reminders){due(item);const el=document.createElement('div');el.className='reminder'+(item.enabled&&item.nextAt<=Date.now()?' due':'');const label=document.createElement('div');label.textContent=item.title+' — '+new Date(item.nextAt).toLocaleString()+' ('+item.repeat+')'+(item.enabled?'':' [inactive]');el.append(label);if(item.notes){const n=document.createElement('small');n.textContent=item.notes;el.append(n)}for(const action of (item.enabled?['complete','snooze','delete']:['toggle','delete'])){const b=document.createElement('button');b.textContent=action;b.className='secondary';b.onclick=async()=>{try{await post(API+'/reminders/'+item.id,{action});load()}catch(e){$('reminderStatus').textContent=e.message}};el.append(b)}list.append(el)}}
+async function load(){try{const r=await fetch(API+'/reminders');const d=await r.json();if(!r.ok)throw Error(d.error);reminders=d.reminders;render()}catch(e){$('reminderStatus').textContent=e.message}}
+$('reminderForm').onsubmit=async e=>{e.preventDefault();try{await post(API+'/reminders',{title:$('title').value,notes:$('notes').value,nextAt:new Date($('when').value).getTime(),zone:Intl.DateTimeFormat().resolvedOptions().timeZone||'America/New_York',repeat:$('repeat').value});$('reminderForm').reset();$('reminderStatus').textContent='Reminder saved';load()}catch(e){$('reminderStatus').textContent=e.message}};
+$('notify').onclick=async()=>{$('reminderStatus').textContent='Notification permission: '+(await Notification.requestPermission())};
+fetch(API+'/status').then(r=>r.json()).then(d=>{$('aiStatus').textContent=d.aiConfigured?'AI key configured':'Demo mode: add OPENAI_API_KEY to Java server for AI conversations'}).catch(()=>{$('aiStatus').textContent='Java API unavailable'});
+load();setInterval(load,15000);
+</script></body></html>
