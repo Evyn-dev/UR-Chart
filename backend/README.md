@@ -1,17 +1,10 @@
 # UR Chart backend
 
-FastAPI + SQLAlchemy + Alembic; SQLite by default. See [BACKEND_GUIDE.md](../BACKEND_GUIDE.md) for setup, API contracts, frontend integration, authentication, AI extension points, and team workflow.
+FastAPI, SQLAlchemy, and Alembic. Follow the [root setup guide](../README.md#local-setup).
 
-Run commands from this directory. Python 3.11+ is required; verified with Python 3.14 on Windows.
+- [API integration reference](../BACKEND_GUIDE.md)
+- [Recovery and caregiver API contracts](RECOVERY_TRACKING.md)
+- Live local Swagger: http://127.0.0.1:8000/docs
+- OpenAPI: http://127.0.0.1:8000/openapi.json
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python -m pip install -r requirements-lock.txt
-Copy-Item .env.example .env
-# Configure demo authentication in .env as described in the guide.
-.\.venv\Scripts\python -m alembic upgrade head
-.\.venv\Scripts\python -m app.seed
-.\.venv\Scripts\python -m uvicorn app.main:app --reload --no-access-log
-```
-
-API docs: http://127.0.0.1:8000/docs
+Routes live in `app/api`, business logic in `app/services`, authentication in `app/auth.py`, and database setup in `app/database.py`. Keep patient ownership checks on the server. Preserve all applied migrations; add new ones for schema changes.

@@ -2,36 +2,11 @@
 
 For medication schedules, scheduled-dose adherence, partial check-ins, trends, and prototype risk alerts, see [Recovery Tracking](backend/RECOVERY_TRACKING.md), which documents the additive contracts after this foundation.
 
-This foundation uses fictional data only. The initial repository contained a README and license; neither was changed. All application code is under `backend/`.
+Use fictional data only. This is the specialized API integration reference. The [root README](README.md) is authoritative for current setup, authentication modes, deployment, and limitations.
 
 ## 1. Install and configure
 
-Use Python 3.11+ (verified on Python 3.14/Windows). From `backend/`:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python -m pip install -r requirements-lock.txt
-Copy-Item .env.example .env
-```
-
-On macOS/Linux use `.venv/bin/python` and `cp .env.example .env`. `requirements.txt` declares dependency ranges; `requirements-lock.txt` freezes the tested environment. Upgrade dependencies deliberately and regenerate the lock after tests pass.
-
-Generate four independent demo bearer tokens (run this four times):
-
-```powershell
-.\.venv\Scripts\python -c "import secrets; print(secrets.token_urlsafe(32))"
-```
-
-Put them in your ignored `.env` as a JSON mapping, substituting each generated token for the placeholders:
-
-```dotenv
-APP_ENV=development
-DEMO_AUTH_ENABLED=true
-DEMO_TOKENS={"GENERATED_TOKEN_ONE":"synthetic-alex","GENERATED_TOKEN_TWO":"synthetic-jordan","GENERATED_TOKEN_THREE":"synthetic-taylor","GENERATED_TOKEN_FOUR":"synthetic-sam"}
-AI_PROVIDER=approved_instructions
-```
-
-The placeholder tokens above will fail length validation. Use the generated values. Share each token privately with its intended developer. These are demo credentials, not patient IDs. The same configured identity keeps its profile when a token is rotated. Requests cannot specify an owner. First authenticated access creates the profile if it does not exist.
+Follow [local setup and configuration](README.md#local-setup) in the root README.
 
 ## 2. Initialize the database and start
 
@@ -68,7 +43,7 @@ async function request(path, token, method = "GET", body) {
 
 Configure `ALLOWED_ORIGINS` as a JSON array of exact frontend origins, including scheme and port. Default origins are `http://localhost:3000` and `http://localhost:5173`. Wildcards are rejected; cookies are not used.
 
-For shared integration, all four developers must use the **same hosted API URL and shared database**. Separate localhost instances have separate data. A future approved shared demo can use one API process and one persistent SQLite volume; PostgreSQL is preferable for multiple workers/hosts. Do not put SQLite on a shared network filesystem. No deployment is included or authorized by this implementation.
+For shared integration, all four developers must use the **same hosted API URL and shared database**. Separate localhost instances have separate data. A future approved shared demo can use one API process and one persistent SQLite volume; PostgreSQL is preferable for multiple workers/hosts. Do not put SQLite on a shared network filesystem. Existing hosted configuration is described in the root README; this guide does not deploy it.
 
 ## 4. API contracts
 
@@ -126,7 +101,7 @@ Add a router under `app/api/`, schemas under `app/schemas/`, and business logic 
 
 ## 6. Models and migrations
 
-Nine tables cover patients, recovery plans, medications, medication logs, check-ins, conversations, messages, alerts, and care-team connections. Records have UUIDs, created/updated timestamps, foreign keys, and owner indexes. Patients have a unique authenticated identity; check-ins are unique per patient/day; care-team membership is unique per patient/member. Care-team records do not yet grant access to any patient data.
+The original core tables cover patients, recovery plans, medications, medication logs, check-ins, conversations, messages, alerts, and care-team connections. Subsequent migrations add medication schedules, risk evaluations, correction/inventory audits, caregiver relationships, and access audits; see the recovery integration guide. Records have UUIDs, created/updated timestamps, foreign keys, and owner indexes. Patients have a unique authenticated identity; check-ins are unique per patient/day; care-team membership is unique per patient/member. Care-team records do not yet grant access to any patient data.
 
 Add models in `app/models/` and import them in its `__init__.py` so Alembic sees them. Then:
 
@@ -138,7 +113,7 @@ Add models in `app/models/` and import them in its `__init__.py` so Alembic sees
 
 Review generated migration operations before applying them. Never edit a migration already shared/applied. Coordinate migration ownership; resolve multiple Alembic heads together. Keep health revision checking updated when adding a revision. The initial migration is explicit and independent of future model definitions.
 
-SQLAlchemy uses portable types and relationships. To move to PostgreSQL later, install the psycopg driver, change `DATABASE_URL` to a `postgresql+psycopg://...` connection string, and apply migrations to an empty target. Existing SQLite data needs a separate reviewed export/import. PostgreSQL compatibility has not been integration-tested; test migrations and constraints against the actual server before adoption.
+SQLAlchemy uses portable types and relationships. To move to PostgreSQL later, install the psycopg driver, change `DATABASE_URL` to a `postgresql+psycopg://...` connection string, and apply migrations to an empty target. Existing SQLite data needs a separate reviewed export/import. The PostgreSQL compatibility workflow upgrades/checks migrations on a disposable service and tests private-schema ORM access. Most feature tests use SQLite. See the root README for private-schema migration targeting limitations.
 
 ## 7. AI and authentication extension points
 
@@ -146,7 +121,7 @@ SQLAlchemy uses portable types and relationships. To move to PostgreSQL later, i
 
 `AI_API_KEY` is reserved for a future external adapter and is currently unused. Set future credentials only in server environment variables. An adapter must implement request timeouts, bounded outputs, provider error handling, and a reviewed medical-safety policy before enabling generative responses. Register it in `build_provider` and add failure/safety tests. The common service translates provider failures into sanitized 503 responses, and the chat route stores user/assistant messages together only after a valid response.
 
-Demo authentication defaults off and is rejected in production. With no provider configured, protected endpoints return 503, not fake success. Replace `current_patient` with verified identity-provider claims (issuer, audience, expiry, signature validation), mapping the verified subject to `Patient.user_id`. Production login, role-based clinician permissions, token expiry/revocation, rate limiting, and audit logging are not implemented. This is a synthetic-data hackathon foundation, not a production patient system.
+Local token authentication defaults off and is rejected in production. Hosted shared-code authentication is a separate fictional demo mode. The existing `authenticated_identity` implementation also verifies Supabase bearer tokens against its user endpoint; preserve this server-side verification and `current_patient` ownership mapping. With no provider configured, protected endpoints return 503. Clinician roles, a full production login UI, rate limiting, and comprehensive access auditing remain incomplete; caregiver and correction events already have audit records. See the root README for mode precedence.
 
 ## 8. Demo data
 
