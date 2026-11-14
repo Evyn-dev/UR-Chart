@@ -4,7 +4,7 @@ A recovery companion for the NC A&T Medtronic Hackathon. **Fictional demonstrati
 
 ## What works
 
-Medication schedules and dose records, inventory/refill indicators, audited corrections, daily check-ins, descriptive trends, prototype safety alerts, consent-based caregiver summaries, and stored chat conversations. Chat can quote approved instructions when enabled. Voice, generative AI, and personal reminders remain unmerged work; appointments and care-team messaging are explicitly unavailable.
+Medication schedules and dose records, inventory/refill indicators, audited corrections, daily check-ins, descriptive trends, prototype safety alerts, consent-based caregiver summaries, and stored chat conversations. Chat can quote approved instructions when enabled. This integration adds optional local Ollama, opt-in browser voice, and persistent personal reminders. Appointments and care-team messaging are explicitly unavailable. See [assistant/reminder behavior and rollout](docs/ASSISTANT_REMINDERS.md).
 
 ## Architecture
 
@@ -19,7 +19,7 @@ Medication schedules and dose records, inventory/refill indicators, audited corr
 | Chat/provider boundary | `api/chat.py`, `services/ai.py` |
 | Database and migrations | `app/database.py`, SQLAlchemy models, `migrations/versions/` |
 
-React 19 + TypeScript + Vite communicates with FastAPI through `/api`. Successes use `{"data": ...}`; errors use `{"error": ...}`. FastAPI owns authorization and medical screening. SQLAlchemy uses SQLite locally or PostgreSQL when configured. All five existing migrations are retained unchanged.
+React 19 + TypeScript + Vite communicates with FastAPI through `/api`. Successes use `{"data": ...}`; errors use `{"error": ...}`. FastAPI owns authorization and medical screening. SQLAlchemy uses SQLite locally or PostgreSQL when configured. Migrations 0001–0005 are retained unchanged; 0006 adds personal reminders.
 
 ## Local setup
 
@@ -62,12 +62,12 @@ Backend settings load from `backend/.env` when started in that directory. Use [b
 | --- | --- |
 | `APP_ENV` | `development`, `test`, or `production`; production rejects local demo tokens and prototype risk evaluation |
 | `DATABASE_URL` | Local SQLite by default; PostgreSQL uses `postgresql+psycopg` and requires the psycopg driver |
-| `DATABASE_SCHEMA` | Optional existing private PostgreSQL schema for runtime ORM routing; not a schema-provisioning command |
+| `DATABASE_SCHEMA` | Optional existing private PostgreSQL schema for runtime ORM and online migration targeting; does not provision schemas |
 | `ALLOWED_ORIGINS` | JSON list of exact permitted frontend origins; no wildcard |
 | `DEMO_AUTH_ENABLED`, `DEMO_TOKENS` | Local fictional identity mapping; first authentication mode when enabled |
 | `HOSTED_DEMO_CODE_HASH` | SHA-256 hex hash of a separately managed shared demo code; enables fictional patient/caregiver personas |
 | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | Paired settings for server-side verification of an existing Supabase bearer token when demo modes are off |
-| `AI_PROVIDER` | `disabled` or `approved_instructions`; no generative provider on main |
+| `AI_PROVIDER` | `disabled`, `approved_instructions`, or development-only `ollama`; hosted Ollama configuration falls back to approved instructions |
 | `AI_API_KEY` | Reserved setting; currently unused by merged providers |
 | `RISK_RULES_FILE` | Optional server-controlled rule JSON; default rules are prototype-only |
 | `VITE_API_BASE_URL` | Frontend build-time API origin, without `/api`; unset for local Vite proxy |
@@ -80,7 +80,7 @@ Caregiver access requires an invitation to a configured demo identity, acceptanc
 
 Run `python -m alembic upgrade head` and `python -m alembic check` from `backend/` using its virtual environment and intended database configuration. Never reset a shared database or edit applied migration files. Add a migration for future schema changes.
 
-For PostgreSQL install `python -m pip install "psycopg[binary]>=3.2,<4"` in the virtual environment. The locked local dependency set does not include this optional driver. Runtime `DATABASE_SCHEMA` translation and migration targeting are different: the current Alembic environment does not provision/target a private schema from that setting. Preserve the established hosted schema workflow; do not run migrations against a private-schema deployment without checking the target with its owner.
+For PostgreSQL install `python -m pip install "psycopg[binary]>=3.2,<4"` in the virtual environment. The locked local dependency set does not include this optional driver. With `DATABASE_SCHEMA`, online migrations target that existing private schema and its version table, failing if it does not exist. No schemas or grants are provisioned. See [migration and rollout details](docs/ASSISTANT_REMINDERS.md#database-and-rollout).
 
 ## Testing
 
@@ -101,5 +101,5 @@ Teammates should use a common reachable API origin with separate authorized iden
 - Missing dose records are not proof of missed medication; trends are descriptive, not predictions.
 - Caregiver invitations currently accept configured demo identities, not arbitrary production users.
 - Some frontend lists show only the first API page. Backend pagination is available; full pagination UI remains follow-up work.
-- PRs #7/#8 contain unique assistant/reminder work requiring reconciliation. They are not activated by this cleanup.
+- Selected functionality from PRs #7/#8 is integrated here; both original PRs remain open. Local model and browser hardware behavior require environment-specific validation.
 - Historical implementation notes are retained under [docs/history](docs/history/WEBSITE_HANDOFF.md), not current operating instructions.

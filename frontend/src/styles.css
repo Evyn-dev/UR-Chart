@@ -34,3 +34,5 @@
 .feature-start{display:flex;justify-content:space-between;align-items:center;gap:16px;border-radius:16px;padding:22px 25px;background:#eae6f8}
 @media(max-width:1050px){.feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){.feature-grid{grid-template-columns:1fr}.feature-hub-guest{padding:0 16px 45px}.feature-guest-nav{padding:18px 0 30px}.feature-start{flex-direction:column;align-items:stretch}.feature-tile{padding:19px}.feature-important{margin-bottom:22px}}
+
+.voice-controls{margin-bottom:20px}.voice-controls .row-actions,.reminder-card .row-actions{flex-wrap:wrap}.reminder-card{padding:18px 0;border-bottom:1px solid #e8edf5}.reminder-card h3{margin:0 0 8px}.form-grid textarea{min-height:80px}

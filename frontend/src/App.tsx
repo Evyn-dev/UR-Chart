@@ -17,6 +17,8 @@ import {AssistantPage} from './pages/AssistantPage';
 import {CaregiversPage} from './pages/CaregiversPage';
 import {SettingsPage} from './pages/SettingsPage';
 import {UnavailablePage} from './pages/UnavailablePage';
+import {RemindersPage} from './pages/RemindersPage';
+import {ReminderNotificationsProvider} from './hooks/reminderNotifications';
 
 const sessionKey='urchart-demo-session';
 export function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
@@ -81,11 +83,11 @@ export default function App(){
   if(checking)return <div className="startup"><HeartPulse size={36}/><p>Opening your recovery space…</p></div>;
   if(!token||!patient)return pathname==='/features'?<FeaturesPage guest/>:<DemoLogin onLogin={login}/>;
   return <SessionProvider token={token} initialPatient={patient} signOut={signOut}>
-    <Routes><Route element={<Shell/>}>
-      <Route path="/" element={<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<AssistantPage/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
+    <ReminderNotificationsProvider><Routes><Route element={<Shell/>}>
+      <Route path="/" element={<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/reminders" element={<RemindersPage/>}/><Route path="/assistant" element={<AssistantPage/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
       <Route path="/appointments" element={<UnavailablePage title="Appointments" reason="Appointments are not connected to a backend service yet."/>}/>
       <Route path="/messages" element={<UnavailablePage title="Care team messages" reason="Secure care team messaging is not connected yet. Use your discharge paperwork to contact your clinical team."/>}/>
       <Route path="*" element={<Navigate to="/" replace/>}/>
-    </Route></Routes>
+    </Route></Routes></ReminderNotificationsProvider>
   </SessionProvider>
 }

@@ -15,12 +15,13 @@ type Feature = {
 };
 
 export const featureDirectory:Feature[] = [
+  {title:'Personal reminders',description:'Persistent tasks with recurrence and optional notifications while the app is open.',destination:'/reminders',icon:CalendarDays,available:true,category:'Track recovery'},
   {title:'Recovery overview',description:'A daily dashboard for your check-ins, scheduled doses, trends and active demo alerts.',destination:'/',icon:House,available:true,category:'Track recovery'},
   {title:'Medication management',description:'Record prescribed medications, daily schedules, doses, corrections and refill awareness.',destination:'/medications',icon:Pill,available:true,category:'Track recovery'},
   {title:'Daily check-ins',description:'Log your own wellbeing, pain, symptoms and activity, then correct earlier entries.',destination:'/check-in',icon:Activity,available:true,category:'Track recovery'},
   {title:'Recovery trends',description:'See charts based on your own recorded check-in observations.',destination:'/progress',icon:ChartNoAxesCombined,available:true,category:'Track recovery'},
   {title:'Safety and alerts',description:'Review prototype alerts and safety guidance; no emergency monitoring or clinician notification.',destination:'/alerts',icon:ShieldAlert,available:true,category:'Care and support'},
-  {title:'Recovery assistant',description:'Chat about approved demo instructions. Generative AI and voice are not yet connected.',destination:'/assistant',icon:MessageCircle,available:true,category:'Care and support'},
+  {title:'Recovery assistant',description:'Approved-instructions chat, optional local AI, and browser voice controls. Hosted chat works without a local model.',destination:'/assistant',icon:MessageCircle,available:true,category:'Care and support'},
   {title:'Caregiver access',description:'Invite fictional caregivers, choose sharing permissions and revoke consent.',destination:'/caregivers',icon:HeartHandshake,available:true,category:'Care and support'},
   {title:'Appointments',description:'Appointment booking and scheduling are not connected to a service yet.',destination:'/appointments',icon:CalendarDays,available:false,category:'Care and support'},
   {title:'Care-team messages',description:'Secure care-team messaging is not connected to a service yet.',destination:'/messages',icon:Stethoscope,available:false,category:'Care and support'},
