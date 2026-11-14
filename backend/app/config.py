@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     demo_tokens: dict[str, str] = {}
     ai_provider: Literal["disabled", "approved_instructions"] = "disabled"
     ai_api_key: str = ""
+    risk_rules_file: str | None = None
 
     @model_validator(mode="after")
     def secure_defaults(self):

@@ -1,0 +1,9 @@
+{
+  "rules": [
+    {"id":"prototype_chest_pain","version":"1","prototype_only":true,"kind":"symptom","symptom_code":"chest_pain","severity":"emergency","guidance":"You reported chest pain. This prototype cannot determine its cause."},
+    {"id":"prototype_breathing","version":"1","prototype_only":true,"kind":"symptom","symptom_code":"shortness_of_breath","severity":"emergency","guidance":"You reported shortness of breath. This prototype cannot determine its cause."},
+    {"id":"demo_urgent","version":"1","prototype_only":true,"kind":"symptom","symptom_code":"demo_urgent","severity":"urgent","guidance":"Synthetic demonstration alert: contact your care team promptly for assessment. If an immediate emergency is possible, contact emergency services (911 in the United States)."},
+    {"id":"demo_review","version":"1","prototype_only":true,"kind":"symptom","symptom_code":"demo_review","severity":"needs_clinical_review","guidance":"Synthetic demonstration alert: contact your care team to review your concerns."},
+    {"id":"demo_routine","version":"1","prototype_only":true,"kind":"symptom","symptom_code":"demo_routine","severity":"routine","guidance":"Synthetic demonstration record for your next care-team discussion. This classification does not establish that you are medically safe."}
+  ]
+}

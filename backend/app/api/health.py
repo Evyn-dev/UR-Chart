@@ -4,6 +4,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from pydantic import BaseModel
 from app.auth import get_db
 from app.schemas import Data
+from pathlib import Path
+from alembic.script import ScriptDirectory
 
 router = APIRouter(tags=["health"])
 
@@ -17,8 +19,9 @@ class Health(BaseModel):
 @router.get("/health", response_model=Data[Health])
 def health(request: Request, db=Depends(get_db)):
     try:
-        revision = db.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        if revision != "0001":
+        revisions = set(db.execute(text("SELECT version_num FROM alembic_version")).scalars())
+        heads = set(ScriptDirectory(str(Path(__file__).resolve().parents[2] / "migrations")).get_heads())
+        if revisions != heads:
             raise HTTPException(503, "Database migrations required")
     except SQLAlchemyError:
         raise HTTPException(503, "Database unavailable or migrations required") from None
