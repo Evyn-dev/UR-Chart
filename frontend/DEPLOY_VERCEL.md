@@ -1,14 +1,10 @@
 # Deploying UR Chart to Vercel
 
-## Current deployment status (November 14, 2026)
+## Configuration reference
 
-- **Frontend project:** `ur-chart` in the Vercel team `edwincale08-7707s-projects`.
-- **Production URL:** https://ur-chart.vercel.app
-- **Git source:** `Evyn-dev/UR-Chart`, branch `main`, project root `frontend`.
-- **Build:** Vercel production deployment reached `READY`; automatic redeploys from GitHub `main` confirmed.
-- **Access:** Vercel Authentication protection is currently enabled for generated domains. Team members may need Vercel access to view the site.
-- **Frontend CI:** `.github/workflows/frontend-tests.yml` runs tests, type-check, production build, and npm security audits. First run passed 5 tests and the production-dependency audit found 0 vulnerabilities. The full development-dependency audit reported 3 issues involving Vitest/tinypool; review a compatible upgrade rather than forcing a major update.
-- **Backend:** NOT hosted as of this status entry. Login, check-in, medication, alert, and caregiver workflows have **not** been verified online. Do not infer the API works just because the static build succeeded.
+The repository's hosted smoke workflow targets `https://ur-chart-api.vercel.app`; the frontend project uses `https://ur-chart.vercel.app`. Treat these as configured targets, not proof of live availability. Check the latest deployment and smoke results before a demo.
+
+The frontend uses root `frontend`, `npm ci`, `npm run build`, and output `dist`. The backend entry point is `backend/index.py`. Existing project settings and secrets are managed outside Git and must be preserved. This cleanup does not redeploy either project.
 
 This guide prepares the **React + TypeScript frontend** for Vercel hosting. Vercel does **not** automatically host the project's existing Python FastAPI server or persistent SQLite database when importing the `frontend/` directory.
 
@@ -66,4 +62,4 @@ This `VITE_*` variable is intentionally public in the browser bundle. **Never pl
 
 The one-click Windows launcher and local Vite proxy continue to use `http://127.0.0.1:8000`. They do not affect Vercel hosting. Leave `VITE_API_BASE_URL` unset for the usual local proxy workflow.
 
-See `frontend/README.md` for local setup.
+See [the root README](../README.md) for local setup and authentication.

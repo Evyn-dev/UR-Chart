@@ -1,6 +1,6 @@
 # Recovery tracking integration
 
-Medication management, daily check-ins, prototype risk alerts, and caregiver sharing extend the existing shared backend. The latest work is on `feature/caregiver-recovery`, based on `feature/recovery-tracking` and PR #2. Use fictional data only. No frontend or chat implementation is changed.
+Medication management, daily check-ins, prototype risk alerts, and caregiver sharing extend the existing shared backend. These APIs are integrated into `main`. Use fictional data only. See the [root README](../README.md) for current setup and the [branch inventory](../docs/REPOSITORY_CLEANUP.md) for unmerged work.
 
 ## Start and connect
 
@@ -13,7 +13,7 @@ From `backend/`, install `requirements-lock.txt` and configure demo credentials 
 
 Swagger: `/docs`. OpenAPI: `/openapi.json`. All patient APIs use the existing bearer token and ownership checks, `{"data": ...}` successes, and `{"error": ...}` failures. Foreign record IDs return 404.
 
-Teammates should configure the same reachable API base URL and separate demo tokens. Configure exact frontend origins in `ALLOWED_ORIGINS`. Separate localhost instances do not share data. This branch is not deployed; production authentication remains outside this feature.
+Teammates should configure the same reachable API base URL and separate demo tokens. Configure exact frontend origins in `ALLOWED_ORIGINS`. Separate localhost instances do not share data. Caregiver invitations currently support configured demo identities; this is not a production sharing system.
 
 ## Functional APIs
 
@@ -224,9 +224,9 @@ Consent/access audits record invitation creation, acceptance/decline, access gra
 
 Migration `0004` adds recovery query indexes. `0005` adds consent/access and correction-audit tables, editable record versions, inventory reconciliation revisions, alert lifecycle fields, and per-check-in-revision rule uniqueness. Existing rows receive version 1. Applied migrations `0001`-`0003` are unchanged. Downgrade refuses to discard populated consent/correction history without explicit reconciliation.
 
-Run `python -m alembic upgrade head` once on the shared database before starting the updated app; back it up first. No extra package or new secret is required. Existing demo token mappings, CORS origins, database URL, and prototype-rule configuration remain in use. The implementation is tested against SQLite; PostgreSQL integration and load testing remain unperformed.
+Run `python -m alembic upgrade head` once on the shared database before starting the updated app; back it up first. No extra package or new secret is required. Existing demo token mappings, CORS origins, database URL, and prototype-rule configuration remain in use. The implementation is tested against SQLite; PostgreSQL migration/private-schema checks run in CI; load testing remains unperformed.
 
 The feature adds no frontend, production login, delivered notifications, clinical validation, caregiver record editing, invitation email delivery, or automatic medication-consumption assumptions. Invitations do not expire automatically in this demo. Numeric rules still require actual clinician review outside the software. Teammates should use the same reachable backend URL and their own identities, and handle 409 by reloading versions.
 
 
-Latest verification: **76 tests passed, none failed**. This includes all 55 baseline tests plus caregiver consent/scopes/revocation, cross-patient isolation, correction audits, stale-update rollback, supply estimates, repeated-rule revisions, fixed-query-count summaries, and populated migration upgrades. Alembic check reports no missing operations. Live HTTP checks passed for health, Swagger/OpenAPI, invite, accept, dashboard, and revoked-access denial. One existing httpx test-client deprecation warning remains.
+Current verification results are recorded in the [cleanup report](../docs/REPOSITORY_CLEANUP.md#verification). Existing tests cover caregiver consent/scopes/revocation, cross-patient isolation, correction audits, stale-update rollback, supply estimates, repeated-rule revisions, fixed-query-count summaries, and populated migration upgrades.
