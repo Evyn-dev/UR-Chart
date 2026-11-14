@@ -1,6 +1,8 @@
 # UR Chart local demo launcher. Windows 10/11, PowerShell 5.1+.
 # Sets up fictional demo data on the first launch. Never use with real patient records.
 $ErrorActionPreference = 'Stop'
+# Enable code-free fictional presentation only for these child processes.
+$env:PRESENTATION_DEMO_ENABLED = 'true'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $backend = Join-Path $root 'backend'
 $frontend = Join-Path $root 'frontend'
@@ -71,7 +73,7 @@ try {
   # Seed is idempotent and runs only in demo-auth development mode.
   $settingsOutput = & $pythonExe -c 'from app.config import Settings; print(int(Settings().demo_auth_enabled))'
   Assert-LastCommand 'Backend settings check'
-  if (($settingsOutput | Select-Object -Last 1) -eq '1') {
+  if (($settingsOutput | Select-Object -Last 1) -eq '1' -or $env:PRESENTATION_DEMO_ENABLED -eq 'true') {
     & $pythonExe -m app.seed
     Assert-LastCommand 'Synthetic demo data setup'
   } else {
@@ -102,16 +104,13 @@ if (-not $ready) {
 if ($createdDemo -and (Test-Path $generatedTokenFile)) {
   $token = Get-Content $generatedTokenFile -Raw
   Write-Host ''
-  Write-Host 'Your fictional patient demo token (copy and paste at login):' -ForegroundColor Yellow
-  Write-Host $token.Trim() -ForegroundColor Green
-  try { Set-Clipboard -Value $token.Trim(); Write-Host 'Token also copied to clipboard. Press Ctrl+V on the login screen.' }
-  catch { Write-Host 'Copy the token displayed above to sign in.' }
+  Write-Host 'Fictional demo token saved locally; presentation visitors can use one-click entry.' -ForegroundColor Yellow
+  # No demo credentials shown or copied; presentation mode uses synthetic one-click entry.
 } elseif (Test-Path $generatedTokenFile) {
   $token = (Get-Content $generatedTokenFile -Raw).Trim()
-  try { Set-Clipboard -Value $token; Write-Host 'Previously generated fictional demo token copied to clipboard for login.' }
-  catch { Write-Host 'See backend/.demo-access-token for your fictional demo token.' }
+  Write-Host 'One-click presentation entry is enabled; no code entry required.'
 } else {
-  Write-Host 'Sign in using a demo token from your existing backend/.env configuration.'
+  Write-Host 'One-click presentation entry is enabled; no code entry required.'
 }
 Write-Host "Opening $siteUrl" -ForegroundColor Cyan
 Start-Process $siteUrl
