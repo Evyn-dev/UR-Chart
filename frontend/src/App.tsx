@@ -10,7 +10,8 @@ import {MonitorBackdrop,EcgTrace} from './components/MonitorBackdrop';
 import {ClaraAssistant} from './components/ClaraAssistant';
 import {OperationProvider,OperationSetup} from './components/OperationTemplates';
 import {FeaturesPage} from './pages/FeaturesPage';
-import {Dashboard,MedicationsPage,CheckinPage,ProgressPage,AlertsPage,CaregiversPage,SettingsPage,UnavailablePage} from './pages/Pages';
+import {EmergencyConnect,DailyBriefing,RecoveryMilestones,DoctorVisitPrep,AppointmentPlanner,CaregiverSupportMessages} from './pages/RecoverySuite';
+import {Dashboard,MedicationsPage,CheckinPage,ProgressPage,AlertsPage,CaregiversPage,SettingsPage} from './pages/Pages';
 
 const sessionKey='urchart-demo-session';
 function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
@@ -93,8 +94,8 @@ export default function App(){
     <OperationProvider key={patient.id} patientId={patient.id} enabled={!token.endsWith(':caregiver')}>
     <Routes><Route element={<Shell/>}>
       <Route path="/" element={token.endsWith(":caregiver")?<Navigate to="/caregivers" replace/>:<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<Dashboard/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
-      <Route path="/appointments" element={<UnavailablePage title="Appointments" reason="Appointments are not connected to a backend service yet."/>}/>
-      <Route path="/messages" element={<UnavailablePage title="Care team messages" reason="Secure care team messaging is not connected yet. Use your discharge paperwork to contact your clinical team."/>}/>
+      <Route path="/appointments" element={<AppointmentPlanner/>}/><Route path="/daily-briefing" element={<DailyBriefing/>}/><Route path="/journey" element={<RecoveryMilestones/>}/><Route path="/doctor-visit" element={<DoctorVisitPrep/>}/><Route path="/emergency" element={<EmergencyConnect/>}/>
+      <Route path="/messages" element={<CaregiverSupportMessages/>}/>
       <Route path="*" element={<Navigate to="/" replace/>}/>
     </Route></Routes>
     <ClaraAssistant/>
