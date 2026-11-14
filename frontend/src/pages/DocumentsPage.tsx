@@ -9,7 +9,7 @@ type DocumentRow={
  patient_id:string;shared_with_caregivers:boolean;uploader_role:string;can_manage:boolean
 };
 const MAX_BYTES=3*1024*1024;
-const mimeTypes=new Set(['application/pdf','image/png','image/jpeg','text/plain']);
+const mimeTypes=new Set(['application/pdf','image/png','image/jpeg','text/plain','application/vnd.openxmlformats-officedocument.wordprocessingml.document']);
 const labelSize=(size:number)=>size<1024?size+' B':(size/1024/1024).toFixed(2)+' MB';
 
 export function DocumentsPage(){
@@ -41,8 +41,8 @@ export function DocumentsPage(){
   const next=e.target.files?.[0]||null;
   setError('');setNotice('');
   if(!next){setFile(null);return}
-  const detected=next.type||({'pdf':'application/pdf','png':'image/png','jpg':'image/jpeg','jpeg':'image/jpeg','txt':'text/plain'}[next.name.split('.').pop()?.toLowerCase()||'']||'');
-  if(!mimeTypes.has(detected)){setError('Upload PDF, PNG, JPG, or UTF-8 TXT files only.');setFile(null);return}
+  const detected=next.type||({'pdf':'application/pdf','png':'image/png','jpg':'image/jpeg','jpeg':'image/jpeg','txt':'text/plain','docx':'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}[next.name.split('.').pop()?.toLowerCase()||'']||'');
+  if(!mimeTypes.has(detected)){setError('Upload PDF, DOCX, PNG, JPG, or UTF-8 TXT files only.');setFile(null);return}
   if(next.size>MAX_BYTES){setError('Files must be 3 MB or smaller.');setFile(null);return}
   setFile(next);
  }
@@ -91,7 +91,7 @@ export function DocumentsPage(){
   <div className="docs-notice"><Lock size={18}/> Fictional demo files only. Do not upload real medical or identifying documents. Files are stored in the configured demo database.</div>
   <section className="docs-panel">
    <h2><Upload size={21}/> Upload a document</h2>
-   <p>Accepted: PDF, PNG, JPG, and UTF-8 TXT · Maximum 3 MB per file.</p>
+   <p>Accepted: PDF, DOCX, PNG, JPG, and UTF-8 TXT · Maximum 3 MB per file.</p>
    <form onSubmit={submit} className="docs-form">
     {role==='caregiver'&&<label>Upload to patient
      <select required value={patientId} onChange={e=>setPatientId(e.target.value)}>
@@ -99,7 +99,7 @@ export function DocumentsPage(){
       {accepted.map(r=><option value={r.patient_id} key={r.id}>Patient {r.patient_id.slice(0,8)}</option>)}
      </select>
     </label>}
-    <label>Choose a file<input ref={fileRef} type="file" required accept=".pdf,.png,.jpg,.jpeg,.txt,application/pdf,image/png,image/jpeg,text/plain" onChange={choose}/></label>
+    <label>Choose a file<input ref={fileRef} type="file" required accept=".pdf,.docx,.png,.jpg,.jpeg,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,text/plain" onChange={choose}/></label>
     {file&&<small>Selected: {file.name} ({labelSize(file.size)})</small>}
     <button className="btn primary" disabled={busy||!file||(role==='caregiver'&&!patientId)} type="submit"><Upload size={17}/>{busy?'Saving…':'Upload document'}</button>
    </form>
