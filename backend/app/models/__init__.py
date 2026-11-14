@@ -145,4 +145,6 @@ class RiskEvaluation(Record, Base):
     details: Mapped[dict] = mapped_column(JSON)
 
 
-from app.models.support import RecoveryAudit, CaregiverRelationship, CaregiverAudit
+from app.models.support import RecoveryAudit, CaregiverRelationship, CaregiverAudit, CurriculumTask, CurriculumAudit
+
+from app.models.documents import SharedDocument

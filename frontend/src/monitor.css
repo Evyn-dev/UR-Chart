@@ -197,3 +197,155 @@
   .mon-hero h1 { font-size: 33px; }
   .mon-steps { padding-inline: 12px; }
 }
+
+/* ===== Clinical White + Ocean Blue design system =====
+   Visual overrides only: existing auth, data flows, routing and Clara are unchanged.
+   Dark ink on pale surfaces, accessible blue buttons, and muted cyan ECG detail. */
+:root{
+ --mon-green:#168A98;--mon-cyan:#2168A5;--mon-bg:#F5F8FC;
+ --mon-text:#17304A;--mon-muted:#526C80;
+ --clinical-bg:#F5F8FC;--clinical-card:#FFFFFF;--clinical-ink:#17304A;
+ --clinical-subtle:#526C80;--clinical-border:#DCE8EF;
+ --clinical-teal:#117482;--clinical-blue:#2168A5;--clinical-soft:#EAF5F8;
+ color:#17304A;background:#F5F8FC;
+}
+html,body,#root{background:#F5F8FC;color:#17304A}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline-color:#117482}
+.monitor-grid{background-image:linear-gradient(90deg,rgba(22,138,152,.07) 1px,transparent 1px),linear-gradient(rgba(22,138,152,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(33,104,165,.1) 1px,transparent 1px),linear-gradient(rgba(33,104,165,.1) 1px,transparent 1px)}
+.monitor-scan{background:radial-gradient(ellipse at center,rgba(255,255,255,0) 50%,rgba(225,238,247,.55) 100%)}
+.ecg-main{filter:drop-shadow(0 0 4px rgba(22,138,152,.24))}
+.ecg-pleth{filter:drop-shadow(0 0 4px rgba(33,104,165,.2))}
+.mon-screen{background:radial-gradient(ellipse at 70% 35%,#E9F5FA 0%,#F5F8FC 60%,#EDF3F9 100%);color:#17304A}
+.mon-brand,.mon-brand strong span{color:#117482}
+.mon-brand strong{color:#17304A}
+.mon-link,.mon-card .entry-foot{color:#526C80}
+.mon-link:hover{color:#145D8D}
+.mon-eyebrow{color:#226779}
+.mon-dot{background:#168A98}
+.mon-hero h1{color:#17304A}
+.mon-hero h1 em{color:#168A98;text-shadow:none}
+.mon-hero p,.mon-features span{color:#405C70}
+.mon-features svg{color:#168A98}
+.mon-card{background:rgba(255,255,255,.96);border:1px solid #D5E5EC;box-shadow:0 18px 65px rgba(31,75,110,.12)}
+.mon-card h2,.mon-card h2[style]{color:#17304A!important}
+.mon-card p,.mon-card p[style]{color:#526C80!important}
+.mon-card label{color:#344F65}
+.mon-card input,.mon-card select{background:#FFFFFF;color:#17304A;border-color:#BFCFDB}
+.mon-card input::placeholder{color:#657C8C}
+.mon-card option{background:#FFFFFF;color:#17304A}
+.mon-card .field-with-icon svg{color:#497284}
+.mon-card .btn.primary{background:#2168A5;color:white;border-color:#2168A5;box-shadow:none}
+.mon-card .btn.primary:hover{background:#175889}
+.mon-card .btn.wide:not(.primary),.mon-card .btn.wide[style]:not(.primary){background:#EAF3FA!important;border:1px solid #BFD9E8!important;color:#173F61!important}
+.mon-card .btn.wide:not(.primary):hover{background:#DDEEF8!important}
+.mon-card .feedback.error{background:#FFF1F1;color:#973B3B;border-color:#F1C6C6}
+.mon-readout svg,.mon-readout b{color:#168A98;text-shadow:none;filter:none}
+.mon-readout span{color:#526C80}
+.mon-steps div{background:rgba(255,255,255,.92);border-color:#D4E5ED;box-shadow:0 5px 16px rgba(38,91,126,.06)}
+.mon-steps b{color:#117482}
+.mon-steps span{color:#17304A}
+.welcome-band{background:linear-gradient(110deg,#E7F4FB 0%,#D9EFF6 100%);border:1px solid #CDE5F0;color:#17304A}
+.welcome-band h1,.welcome-band p{color:#17304A}
+.welcome-band .eyebrow{color:#176B7C}
+.welcome-band .ecg{opacity:.28}
+.welcome-band .btn.primary{background:#2168A5;color:#FFFFFF}
+.welcome-band .hello-dot{color:#168A98}
+.welcome-band .welcome-art{color:#168A98}
+.welcome-band .heart-orbit{border-color:rgba(22,138,152,.26);background:radial-gradient(circle,rgba(22,138,152,.12),transparent 70%)}
+.welcome-band .heart-orbit svg{filter:drop-shadow(0 0 5px rgba(22,138,152,.22))}
+.startup{background:#F5F8FC;color:#168A98}
+.startup p{color:#526C80}
+.startup svg{filter:none}
+/* App layout and navigation */
+.app-shell{background:#F5F8FC;color:#17304A}
+.app-shell .workspace{background:#F5F8FC}
+.app-shell .sidebar{background:#FFFFFF;border-right:1px solid #DCE8EF}
+.app-shell .topbar{background:rgba(255,255,255,.97);border-bottom:1px solid #DCE8EF}
+.app-shell .sidebar-logo strong,.app-shell .sidebar-person b,.app-shell .breadcrumb strong{color:#17304A}
+.app-shell .sidebar-logo strong span,.app-shell .brand-mark{color:#168A98}
+.app-shell .brand-mark{background:#E1F2F3;color:#117482}
+.app-shell .logo-dot{background:#168A98}
+.app-shell .sidebar-caption,.app-shell .breadcrumb,.app-shell .nav-link{color:#526C80}
+.app-shell .nav-link:hover,.app-shell .nav-link.active{background:#EAF3FA;color:#155E92}
+.app-shell .main-content{color:#17304A}
+.app-shell .page-intro h1,.app-shell .page-intro p{color:#17304A}
+.app-shell .page-intro .eyebrow,.app-shell .section-heading{color:#117482}
+.app-shell .panel,.app-shell .stat-card,.app-shell .feature-tile,.app-shell .content-card{background:#FFFFFF;color:#17304A;border:1px solid #DCE8EF;box-shadow:0 4px 16px rgba(36,84,121,.055)}
+.app-shell .panel h1,.app-shell .panel h2,.app-shell .panel h3,.app-shell .stat-card b,.app-shell .stat-card strong,.app-shell .content-card h3{color:#17304A}
+.app-shell .stat-value,.app-shell .stat-card-head,.app-shell .panel-title,.app-shell .dose-name strong{color:#17304A}
+.app-shell .stat-card-head,.app-shell .dose-name span,.app-shell .time-chip{color:#526C80}
+.app-shell .stat-icon{background:#E3F3F6;color:#117482}
+.app-shell .muted,.app-shell .panel p,.app-shell .stat-card p,.app-shell .site-footer{color:#526C80}
+.app-shell .site-footer{background:#FFFFFF;border-top:1px solid #DCE8EF}
+.app-shell .btn.primary{background:#2168A5;color:#FFFFFF;border-color:#2168A5}
+.app-shell .btn.primary:hover{background:#175889;border-color:#175889}
+.app-shell .btn.ghost,.app-shell .btn.secondary{background:#EAF3FA;border-color:#C8DFEB;color:#1A597D}
+.app-shell input,.app-shell textarea,.app-shell select{background:#FFFFFF;color:#17304A;border-color:#BFCFDB}
+.app-shell input::placeholder,.app-shell textarea::placeholder{color:#667B8D}
+.app-shell label,.app-shell legend,.app-shell .top-profile,.app-shell .topbar-emergency{color:#344F65}
+.app-shell .topbar-emergency{background:#EAF3FA;border-color:#BED7E6;color:#175D88}
+.app-shell .sidebar-support{background:#EAF4F9;border-color:#D1E3EC;color:#17304A}
+.app-shell .sidebar-support p{color:#526C80}
+.app-shell .avatar{background:#DCEFF5;color:#135D7A}
+.app-shell .notice,.app-shell .feature-important{background:#EAF5F8;border-color:#CEE5EA;color:#254D64}
+.app-shell .time-chip,.app-shell .dose-row,.app-shell .shortcut-list a{color:#24485F;border-color:#E2EBF1}
+.app-shell .time-chip{color:#176B83}
+.app-shell .dose-name strong{color:#17304A}
+.app-shell .dose-name span{color:#526C80}
+.app-shell .shortcut-list a:hover{background:#ECF6FA}
+.app-shell .empty-state,.app-shell .chart-wrap{color:#526C80}
+.app-shell .status-tag.enabled,.app-shell .demo-flag{color:#176B7C}
+.app-shell .card-grid .stat,.app-shell .card-grid .stat-card{border-color:#DCE8EF}
+.app-shell .sidebar-person,.app-shell .profile-popover{border-color:#DCE8EF}
+.app-shell .profile-popover{background:#FFFFFF;color:#17304A;box-shadow:0 12px 25px rgba(16,52,80,.12)}
+.app-shell .profile-popover a,.app-shell .profile-popover button{background:#FFFFFF;color:#17304A}
+.app-shell .profile-popover a:hover,.app-shell .profile-popover button:hover{background:#EAF3FA}
+.app-shell .feedback.error{background:#FFF2F2;border-color:#F2CBCB;color:#963E3E}
+.app-shell .feedback.success{background:#E7F7F2;border-color:#BFE4D4;color:#165F51}
+.app-shell .chart-wrap .recharts-cartesian-axis-tick-value{fill:#526C80}
+/* Caregiver permissions and monitoring */
+.caregiver-summary{background:#F7FBFE;border-color:#CEE2EC;color:#17304A}
+.caregiver-summary h3{color:#17304A}
+.caregiver-summary-section{background:#FFFFFF;border-color:#DCE8EF}
+.caregiver-summary-section>strong{color:#117482}
+.caregiver-summary-section dl div{border-bottom-color:#E2EBF1}
+.caregiver-summary-section dt,.caregiver-summary-section p{color:#526C80}
+.caregiver-summary-section dd{color:#17304A}
+/* Features, including the public feature gallery */
+.feature-hub-guest{background:linear-gradient(145deg,#F5F8FC,#EAF3FA);color:#17304A}
+.feature-hub-guest .feature-heading h1,.feature-hub-guest .feature-brand{color:#17304A}
+.feature-hub-guest .feature-heading h1 span,.feature-hub-guest .feature-tile-icon{color:#168A98}
+.feature-hub-guest .feature-heading p,.feature-hub-guest .feature-tile p{color:#526C80}
+.feature-hub-guest .feature-tile{background:#FFFFFF;border:1px solid #DCE8EF;color:#17304A;box-shadow:0 4px 16px rgba(31,83,115,.05)}
+.feature-hub-guest .feature-tile h3{color:#17304A}
+.feature-hub-guest .feature-tile-icon{background:#E5F3F6}
+.feature-hub-guest .feature-important,.feature-hub-guest .feature-start{background:#EAF4FA;border-color:#CDE2EA;color:#17304A}
+.feature-hub-guest .feature-important strong,.feature-hub-guest .feature-start strong{color:#17304A}
+/* Clara stays above all pages, with readable white cards and blue controls */
+.clara-window{background:#FFFFFF;color:#17304A;border:1px solid #C9DDE7;box-shadow:0 18px 60px rgba(20,60,90,.22)}
+.clara-header{background:linear-gradient(110deg,#E5F3F8,#D8EBF6);color:#17304A}
+.clara-heading strong,.app-shell .clara-window .clara-heading strong{color:#17304A}
+.clara-heading span{color:#526C80}
+.clara-mark,.clara-welcome-icon{background:#D8EEF4;color:#117482}
+.clara-launcher{background:#2168A5;color:#FFFFFF;box-shadow:0 12px 32px rgba(23,88,137,.25);border-color:#2168A5}
+.clara-launcher:hover{background:#175889}
+.clara-toolbar,.clara-compose{border-color:#DCE8EF}
+.clara-toolbar button,.clara-welcome button{background:#EAF3FA;color:#175D88;border-color:#C6DFE9}
+.clara-toolbar button.clara-safety-link{background:#FFF2F1;color:#9B3E44;border-color:#EBC9C9}
+.clara-chat-scroll{background:#F7FAFC}
+.clara-reply{background:#FFFFFF;color:#17304A;border:1px solid #E1EAF0}
+.clara-user{background:#2168A5;color:#FFFFFF}
+.clara-welcome h3{color:#17304A}
+.clara-welcome p,.clara-voice-info,.clara-footer,.app-shell .clara-window .clara-voice-info,.app-shell .clara-window .clara-welcome p{color:#526C80}
+.clara-mic{background:#E0F2F6;color:#117482}
+.clara-send{background:#2168A5;color:#FFFFFF}
+.clara-compose input{background:#FFFFFF;color:#17304A;border-color:#C3D9E3}
+.clara-compose input::placeholder{color:#6B8190}
+.clara-history,.app-shell .clara-window .clara-history{background:#FFFFFF;border-color:#DCE8EF}
+.clara-history button,.app-shell .clara-window .clara-history button{color:#17304A}
+.clara-history button:hover,.app-shell .clara-window .clara-history button:hover{background:#EAF4F9}
+.app-shell .clara-window .clara-toolbar button,.app-shell .clara-window .clara-welcome button{color:#175D88}
+.clara-handsfree-toggle{background:#FFFFFF;color:#344F65;border:1px solid #9ABBCB;box-shadow:0 4px 14px rgba(30,74,104,.14)}
+.clara-handsfree-toggle.is-on{background:#117482;color:#FFFFFF;border-color:#117482;box-shadow:0 0 0 3px rgba(22,138,152,.19),0 4px 14px rgba(30,74,104,.14)}
+.clara-handsfree-toggle:focus-visible{outline-color:#2168A5}
+@media(prefers-contrast:more){.app-shell .muted,.mon-hero p,.clara-footer{color:#344F65}.app-shell .panel,.app-shell .stat-card,.mon-card{border-color:#7394A8}}

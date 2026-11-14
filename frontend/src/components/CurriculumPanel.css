@@ -1,0 +1,10 @@
+
+/* Educational caregiver checklist. Scoped to avoid changing other pages. */
+.curriculum-panel {display:grid;gap:1rem}
+.curriculum-task-list {display:grid;gap:.75rem}
+.curriculum-task {display:flex;align-items:start;justify-content:space-between;gap:1rem;padding:.85rem 0;border-bottom:1px solid var(--border, #dfe5ec);flex-wrap:wrap}
+.curriculum-task p {margin:.25rem 0 0;max-width:65ch}
+.curriculum-editor {display:grid;gap:.75rem;padding:.9rem;border:1px solid var(--border, #dfe5ec);border-radius:12px}
+.curriculum-editor label {display:grid;gap:.35rem}
+.curriculum-history {max-height:18rem;overflow:auto}
+.curriculum-history pre {white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem}
