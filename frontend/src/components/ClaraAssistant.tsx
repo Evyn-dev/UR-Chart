@@ -32,7 +32,7 @@ export function ClaraAssistant(){
  const [speaking,setSpeaking]=useState(false);
  const [muted,setMuted]=useState(false);
  const [micActive,setMicActive]=useState(false);
- const [voiceStatus,setVoiceStatus]=useState('Tap the microphone to talk, or say “Clara” if microphone access is active.');
+ const [voiceStatus,setVoiceStatus]=useState('Microphone off. Tap to talk to Clara.');
  const [emergency,setEmergency]=useState(false);
  const [showHistory,setShowHistory]=useState(false);
  const [history,setHistory]=useState<Array<{id:string;title:string}>>([]);
@@ -41,6 +41,7 @@ export function ClaraAssistant(){
  const recognizer=useRef<Recognizer|null>(null);
  const running=useRef(false);
  const keepListening=useRef(false);
+ const micTimeout=useRef<ReturnType<typeof setTimeout>|null>(null);
  const direct=useRef(false);
  const awaitingWake=useRef(false);
  const sending=useRef(false);
@@ -73,6 +74,20 @@ export function ClaraAssistant(){
   window.speechSynthesis.speak(utterance);
  }
  speakRef.current=speak;
+ function stopMic(){
+  keepListening.current=false;direct.current=false;awaitingWake.current=false;
+  if(micTimeout.current){clearTimeout(micTimeout.current);micTimeout.current=null}
+  setMicActive(false);
+  if(running.current){running.current=false;try{recognizer.current?.stop()}catch{/* already stopped */}}
+ }
+ function startMic(){
+  const r=recognizer.current;
+  if(!r)return;
+  if(micTimeout.current)clearTimeout(micTimeout.current);
+  try{r.start();running.current=true;setVoiceStatus('Listening — ask your question now.');
+   micTimeout.current=setTimeout(()=>{if(direct.current){stopMic();setVoiceStatus('Microphone off. Tap to try again.')}},15000);
+  }catch{stopMic();setVoiceStatus('Could not start microphone. Check browser permissions.')}
+ }
  function greetOnActivation(){
   setOpen(true);
   direct.current=true;awaitingWake.current=false;setMicActive(true);
@@ -80,13 +95,13 @@ export function ClaraAssistant(){
   const r=recognizer.current;
   if(muteRef.current||!('speechSynthesis' in window)){
    setVoiceStatus('Listening — what can I do for you?');
-   if(r&&!running.current){try{keepListening.current=true;r.start();running.current=true}catch{setMicActive(false);setVoiceStatus('Microphone unavailable. Please check permissions.')}}
+   if(r&&!running.current)startMic();
    return;
   }
   greetingActive.current=true;
   setVoiceStatus('Clara: What can I do for you?');
   // Do not let speech recognition transcribe Clara’s own spoken greeting.
-  if(r&&running.current){try{r.stop()}catch{/* not running */}running.current=false}
+  if(r&&running.current){running.current=false;try{r.stop()}catch{/* not running */}}
   window.speechSynthesis.cancel();
   const utterance=new SpeechSynthesisUtterance('What can I do for you?');
   utterance.voice=selectVoice(window.speechSynthesis.getVoices())||null;
@@ -96,7 +111,7 @@ export function ClaraAssistant(){
    greetingActive.current=false;setSpeaking(false);utteranceRef.current=null;
    if(!direct.current)return;
    setVoiceStatus('Listening — ask your question now.');
-   if(r&&!running.current){try{keepListening.current=true;r.start();running.current=true}catch{setMicActive(false);direct.current=false;setVoiceStatus('Could not start microphone. Check browser permissions.')}}
+   if(r&&!running.current)startMic();
   };
   utterance.onstart=()=>setSpeaking(true);
   utterance.onend=finish;utterance.onerror=finish;
@@ -131,7 +146,7 @@ export function ClaraAssistant(){
   catch(e){setError(errorText(e))}
  }
  function showEmergency(){
-  setOpen(true);setEmergency(true);setMicActive(false);direct.current=false;awaitingWake.current=false;greetingActive.current=false;
+  setOpen(true);setEmergency(true);stopMic();greetingActive.current=false;
   if('speechSynthesis' in window)window.speechSynthesis.cancel();
   setSpeaking(false);
   setVoiceStatus('Emergency guidance opened. No emergency call is placed.');
@@ -153,13 +168,13 @@ export function ClaraAssistant(){
     if(match){
      setOpen(true);
      const remainder=phrase.slice(match.index+match[0].length).trim();
-     if(remainder){direct.current=false;awaitingWake.current=false;setMicActive(false);sendRef.current(remainder)}
+     if(remainder){stopMic();sendRef.current(remainder)}
      else{greetRef.current()}
      return;
     }
     if(direct.current||awaitingWake.current){
-     direct.current=false;awaitingWake.current=false;setMicActive(false);
-     setVoiceStatus('Question sent. Say Clara to ask another.');
+     stopMic();
+     setVoiceStatus('Microphone off. Question sent.');
      sendRef.current(phrase);return;
     }
    }
@@ -174,16 +189,13 @@ export function ClaraAssistant(){
   };
   r.onend=()=>{
    running.current=false;
-   if(keepListening.current&&!greetingActive.current){
-    try{r.start();running.current=true}
-    catch{keepListening.current=false;direct.current=false;setMicActive(false);setVoiceStatus('Voice paused. Tap the mic to restart.')}
-   }
+   // Privacy: do not automatically reactivate the microphone.
+   if(!greetingActive.current&&direct.current){direct.current=false;setMicActive(false);setVoiceStatus('Microphone off. Tap to speak again.')}
   };
-  // Best effort only: browser permissions often prevent microphone startup without a click.
-  try{r.start();running.current=true;keepListening.current=true;setVoiceStatus('Say “Clara” or tap the microphone to speak.')}
-  catch{/* User can grant microphone access by tapping the microphone inside the panel. */}
   return()=>{
-   keepListening.current=false;greetingActive.current=false;r.onresult=null;r.onerror=null;r.onend=null;
+   keepListening.current=false;greetingActive.current=false;
+   if(micTimeout.current)clearTimeout(micTimeout.current);
+   r.onresult=null;r.onerror=null;r.onend=null;
    try{r.stop()}catch{/* already stopped */}
    recognizer.current=null;
    if('speechSynthesis' in window)window.speechSynthesis.cancel();
@@ -193,8 +205,9 @@ export function ClaraAssistant(){
   const r=recognizer.current;
   if(!r){setVoiceStatus('Speech recognition unavailable. Please type your question.');return}
   if(direct.current||awaitingWake.current){
-   direct.current=false;awaitingWake.current=false;setMicActive(false);
-   setVoiceStatus('Direct listening stopped. Say Clara for hands-free use.');return;
+   stopMic();greetingActive.current=false;
+   if('speechSynthesis' in window)window.speechSynthesis.cancel();
+   setSpeaking(false);setVoiceStatus('Microphone off. Tap to speak again.');return;
   }
   greetOnActivation();
  }
@@ -211,8 +224,8 @@ export function ClaraAssistant(){
        <span className="clara-mark"><HeartPulse size={23}/></span>
        <div className="clara-heading"><strong>Clara</strong><span>Your recovery companion · demo</span></div>
        <button type="button" aria-label={muted?'Unmute Clara voice':'Mute Clara voice'} title={muted?'Unmute voice':'Mute voice'} className="clara-icon-btn" onClick={toggleMute}>{muted?<VolumeX size={19}/>:<Volume2 size={19}/>}</button>
-       <button type="button" aria-label="Minimize Clara" title="Minimize" className="clara-icon-btn" onClick={()=>setOpen(false)}><ChevronDown size={20}/></button>
-       <button type="button" aria-label="Close Clara" title="Close" className="clara-icon-btn" onClick={()=>setOpen(false)}><X size={20}/></button>
+       <button type="button" aria-label="Minimize Clara" title="Minimize" className="clara-icon-btn" onClick={()=>{stopMic();setOpen(false)}}><ChevronDown size={20}/></button>
+       <button type="button" aria-label="Close Clara" title="Close" className="clara-icon-btn" onClick={()=>{stopMic();setOpen(false)}}><X size={20}/></button>
      </header>
      <div className="clara-toolbar">
        <button type="button" onClick={resetConversation}><Plus size={15}/> New chat</button>
@@ -236,7 +249,7 @@ export function ClaraAssistant(){
      {error&&<div className="clara-error" role="alert">{error}</div>}
      <div className="clara-voice-info" role="status">{voiceStatus}</div>
      <form className="clara-compose" onSubmit={submit}>
-       <button type="button" className={'clara-mic'+(micActive?' is-listening':'')} onClick={tapMic} aria-label={micActive?'Stop listening':'Speak to Clara without wake word'} aria-pressed={micActive}>{micActive?<MicOff size={19}/>:<Mic size={19}/>}</button>
+       <button type="button" className={'clara-mic'+(micActive?' is-listening':'')} onClick={tapMic} aria-label={micActive?'Stop listening':'Start microphone to speak to Clara'} aria-pressed={micActive}>{micActive?<MicOff size={19}/>:<Mic size={19}/>}</button>
        <input ref={input} aria-label="Message Clara" value={draft} onChange={event=>setDraft(event.target.value)} maxLength={4000} placeholder="Ask Clara anything about recovery..." />
        <button type="submit" aria-label="Send to Clara" disabled={busy||!draft.trim()} className="clara-send"><Send size={19}/></button>
      </form>
