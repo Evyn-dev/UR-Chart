@@ -10,9 +10,10 @@ class Settings(BaseSettings):
     allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
     demo_auth_enabled: bool = False
     demo_tokens: dict[str, str] = {}
-    ai_provider: Literal["disabled", "approved_instructions", "openai"] = "disabled"
+    ai_provider: Literal["disabled", "approved_instructions", "openai", "ollama"] = "disabled"
     ai_api_key: str = ""
     ai_model: str = "gpt-4.1-mini"
+    local_ai_model: str = "llama3.2:3b"
     risk_rules_file: str | None = None
 
     @model_validator(mode="after")
