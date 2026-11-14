@@ -6,6 +6,8 @@ visible to the patient and their own uploader, never every caregiver.
 No client-supplied patient ID is trusted for ownership.
 """
 from uuid import UUID
+from io import BytesIO
+from zipfile import ZipFile, BadZipFile
 from urllib.parse import unquote
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
@@ -17,7 +19,8 @@ from app.models import CaregiverRelationship, SharedDocument
 router = APIRouter(prefix="/documents", tags=["shared documents"])
 MAX_BYTES = 3 * 1024 * 1024
 ALLOWED = {"application/pdf": ".pdf", "image/png": ".png",
-           "image/jpeg": ".jpg", "text/plain": ".txt"}
+           "image/jpeg": ".jpg", "text/plain": ".txt",
+           "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx"}
 
 
 class SharingChange(BaseModel):
@@ -32,6 +35,13 @@ def is_valid_content(data: bytes, mime: str) -> bool:
         return data.startswith(b"\x89PNG\r\n\x1a\n")
     if mime == "image/jpeg":
         return data.startswith(b"\xff\xd8\xff")
+    if mime == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        try:
+            with ZipFile(BytesIO(data)) as archive:
+                names = set(archive.namelist())
+                return "word/document.xml" in names and "[Content_Types].xml" in names and not any("vbaProject" in name for name in names)
+        except (BadZipFile, ValueError):
+            return False
     if mime == "text/plain":
         try:
             content = data.decode("utf-8")
@@ -93,7 +103,7 @@ async def upload_document(request: Request, actor=Depends(current_patient), db=D
     # Body is a raw file; reject oversized uploads while streaming, not after buffering.
     mime = request.headers.get("content-type", "").split(";")[0].strip().lower()
     if mime not in ALLOWED:
-        raise HTTPException(415, "Allowed types: PDF, PNG, JPEG, or UTF-8 TXT")
+        raise HTTPException(415, "Allowed types: PDF, DOCX, PNG, JPEG, or UTF-8 TXT")
     if (length := request.headers.get("content-length")):
         try:
             if int(length) > MAX_BYTES:
