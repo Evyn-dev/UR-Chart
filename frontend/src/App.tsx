@@ -7,6 +7,7 @@ import {createClient} from './services/client';
 import {patientsApi} from './services/patients';
 import type {Patient} from './types/api';
 import {Shell} from './components/Shell';
+import {ClaraAssistant} from './components/ClaraAssistant';
 import {PatientSampleDemo} from './components/PatientSampleDemo';
 import {EcgTrace,MonitorBackdrop} from './components/MonitorBackdrop';
 import {FeaturesPage} from './pages/FeaturesPage';
@@ -99,5 +100,6 @@ export default function App(){
       <Route path="/messages" element={<UnavailablePage title="Care team messages" reason="Secure care team messaging is not connected yet. Use your discharge paperwork to contact your clinical team."/>}/>
       <Route path="*" element={<Navigate to="/" replace/>}/>
     </Route></Routes>
+    <ClaraAssistant/>
   </SessionProvider>
 }
