@@ -1,6 +1,6 @@
 import {useEffect,useState} from 'react';
 import {Link,Navigate,Route,Routes,useLocation} from 'react-router-dom';
-import {Activity,ArrowRight,HeartPulse,KeyRound,LockKeyhole,ShieldAlert} from 'lucide-react';
+import {Activity,ArrowRight,HeartPulse,KeyRound,LockKeyhole,ShieldAlert,Users,UserRound} from 'lucide-react';
 import {SessionProvider} from './hooks/session';
 import {createClient} from './services/client';
 import {patientsApi} from './services/patients';
@@ -17,6 +17,20 @@ function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
  const [persona,setPersona]=useState<'patient'|'caregiver'>('patient');
  const [working,setWorking]=useState(false);
  const [error,setError]=useState('');
+ const [manual,setManual]=useState(false);
+ async function enterDemo(role:'patient'|'caregiver'){
+  setWorking(true);setError('');
+  try{
+   const base=(import.meta.env.VITE_API_BASE_URL||'').replace(/\\/$/,'');
+   const response=await fetch(`${base}/api/demo/session`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role}),cache:'no-store'});
+   const result=await response.json().catch(()=>null);
+   if(!response.ok||typeof result?.data?.token!=='string')throw new Error('One-click demo is not enabled on this server. Use the existing demo access code or ask the host to enable PUBLIC_DEMO_ENABLED=true.');
+   const credential=result.data.token;
+   const patient=await patientsApi(createClient(credential)).me();
+   onLogin(credential,patient);
+  }catch(e){setError(e instanceof Error?e.message:'Unable to enter the demo.');setManual(true)}
+  finally{setWorking(false)}
+ }
  async function submit(e:React.FormEvent){
   e.preventDefault();if(!token.trim())return;
   setWorking(true);setError('');
@@ -46,8 +60,15 @@ function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
     <p>Explore medication tracking, check-ins, progress and caregiver tools in one recovery space.</p>
     <div className="mon-features"><span><Activity size={16}/> Daily recovery tracking</span><span><ShieldAlert size={16}/> Clear safety guidance</span></div>
    </section>
-   <section className="mon-card" aria-label="Sign in">
-    <form onSubmit={submit} className="entry-form">
+   <section className="mon-card" aria-label="Enter fictional demo">
+    <h2 style={{margin:'0 0 8px',color:'#eafff3'}}>Explore the demo</h2>
+    <p style={{color:'#bedccb',fontSize:13,marginBottom:18}}>Choose a role. No access code needed when public demo mode is enabled.</p>
+    <button className="btn primary wide" type="button" disabled={working} onClick={()=>{void enterDemo('patient')}}><UserRound size={19}/> {working?'Connecting…':'Enter as Patient'} <ArrowRight size={16}/></button>
+    <button className="btn wide" style={{marginTop:10,background:'#123c29',border:'1px solid #36714b',color:'#eafff3'}} type="button" disabled={working} onClick={()=>{void enterDemo('caregiver')}}><Users size={19}/> Enter as Caregiver <ArrowRight size={16}/></button>
+    <p className="entry-foot" style={{marginTop:16}}>Fictional shared data only. Caregivers see patient information only after an invitation is accepted. No real medical monitoring.</p>
+    {error&&<div role="alert" className="feedback error">{error}</div>}
+    <button type="button" className="mon-link" onClick={()=>setManual(v=>!v)} style={{background:'none',border:0,cursor:'pointer',margin:'12px auto 0',display:'flex'}}>{manual?'Hide code login':'Use an existing demo code instead'}</button>
+    {manual&&<form onSubmit={submit} className="entry-form">
      <label htmlFor="demo-token">Demo access code</label>
      <div className="field-with-icon"><KeyRound size={18}/><input id="demo-token" value={token} onChange={e=>setToken(e.target.value)} type="password" autoComplete="off" placeholder="Enter your demo code" required/></div>
      <label htmlFor="demo-persona" style={{marginTop:12}}>Demo role</label>
@@ -56,8 +77,7 @@ function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
      </select>
      {error&&<div role="alert" className="feedback error">{error}</div>}
      <button className="btn primary wide" disabled={working} type="submit">{working?'Connecting…':'Enter recovery dashboard'}<ArrowRight size={18}/></button>
-    </form>
-    <p className="entry-foot"><LockKeyhole size={14}/> No email required. Shared fictional patient for demonstration only. Anyone holding the code can access its records. Never enter real health data.</p>
+    </form>}
    </section>
   </main>
   <div className="mon-trace"><EcgTrace/><div className="mon-readout"><HeartPulse size={34}/><b>72</b><span>BPM · SAMPLE DISPLAY</span></div></div>
@@ -88,9 +108,9 @@ export default function App(){
   }
   if(checking)return <div className="startup"><HeartPulse size={36}/><p>Opening your recovery space…</p></div>;
   if(!token||!patient)return pathname==='/features'?<FeaturesPage guest/>:<DemoLogin onLogin={login}/>;
-  return <SessionProvider token={token} initialPatient={patient} role={token.endsWith(":caregiver")?"caregiver":"patient"} signOut={signOut}>
+  return <SessionProvider token={token} initialPatient={patient} role={token.endsWith(":caregiver")||token.startsWith("public-demo.caregiver.")?"caregiver":"patient"} signOut={signOut}>
     <Routes><Route element={<Shell/>}>
-      <Route path="/" element={token.endsWith(":caregiver")?<Navigate to="/caregivers" replace/>:<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<Dashboard/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
+      <Route path="/" element={(token.endsWith(":caregiver")||token.startsWith("public-demo.caregiver."))?<Navigate to="/caregivers" replace/>:<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<Dashboard/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
       <Route path="/appointments" element={<UnavailablePage title="Appointments" reason="Appointments are not connected to a backend service yet."/>}/>
       <Route path="/messages" element={<UnavailablePage title="Care team messages" reason="Secure care team messaging is not connected yet. Use your discharge paperwork to contact your clinical team."/>}/>
       <Route path="*" element={<Navigate to="/" replace/>}/>
