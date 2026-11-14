@@ -18,7 +18,20 @@ function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
  async function submit(e:React.FormEvent){
   e.preventDefault();if(!token.trim())return;
   setWorking(true);setError('');
-  try{const credential=token.trim()+':'+persona;const patient=await patientsApi(createClient(credential)).me();onLogin(credential,patient)}
+  try{
+   // Hosted shared demo accepts a role suffix; local DEMO_TOKENS expects the raw token.
+   // Try the hosted form first, then the original token if and only if auth rejects it.
+   const hostedCredential=token.trim()+':'+persona;
+   let credential=hostedCredential;
+   let patient:Patient;
+   try{patient=await patientsApi(createClient(hostedCredential)).me()}
+   catch(e){
+    if(!(e instanceof Error) || !('status' in e) || e.status!==401)throw e;
+    credential=token.trim();
+    patient=await patientsApi(createClient(credential)).me();
+   }
+   onLogin(credential,patient);
+  }
   catch(e){setError(e instanceof Error?e.message:'Unable to connect.')}
   finally{setWorking(false)}
  }
