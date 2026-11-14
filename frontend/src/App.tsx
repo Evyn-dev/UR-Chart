@@ -10,6 +10,7 @@ import {MonitorBackdrop,EcgTrace} from './components/MonitorBackdrop';
 import {ClaraAssistant} from './components/ClaraAssistant';
 import {OperationProvider,OperationSetup} from './components/OperationTemplates';
 import {FeaturesPage} from './pages/FeaturesPage';
+import {DocumentsPage} from './pages/DocumentsPage';
 import {Dashboard,MedicationsPage,CheckinPage,ProgressPage,AlertsPage,CaregiversPage,SettingsPage,UnavailablePage} from './pages/Pages';
 
 const sessionKey='urchart-demo-session';
@@ -92,7 +93,7 @@ export default function App(){
   return <SessionProvider token={token} initialPatient={patient} role={token.endsWith(":caregiver")?"caregiver":"patient"} signOut={signOut}>
     <OperationProvider key={patient.id} patientId={patient.id} enabled={!token.endsWith(':caregiver')}>
     <Routes><Route element={<Shell/>}>
-      <Route path="/" element={token.endsWith(":caregiver")?<Navigate to="/caregivers" replace/>:<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<Dashboard/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/>
+      <Route path="/" element={token.endsWith(":caregiver")?<Navigate to="/caregivers" replace/>:<Dashboard/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/medications" element={<MedicationsPage/>}/><Route path="/check-in" element={<CheckinPage/>}/><Route path="/progress" element={<ProgressPage/>}/><Route path="/assistant" element={<Dashboard/>}/><Route path="/alerts" element={<AlertsPage/>}/><Route path="/caregivers" element={<CaregiversPage/>}/><Route path="/settings" element={<SettingsPage/>}/><Route path="/documents" element={<DocumentsPage/>}/>
       <Route path="/appointments" element={<UnavailablePage title="Appointments" reason="Appointments are not connected to a backend service yet."/>}/>
       <Route path="/messages" element={<UnavailablePage title="Care team messages" reason="Secure care team messaging is not connected yet. Use your discharge paperwork to contact your clinical team."/>}/>
       <Route path="*" element={<Navigate to="/" replace/>}/>
