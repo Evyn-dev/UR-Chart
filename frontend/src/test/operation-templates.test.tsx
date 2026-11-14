@@ -10,10 +10,10 @@ describe('procedure-aware rehabilitation examples',()=>{
   render(<View/>);
   fireEvent.change(screen.getByLabelText('Type of operation'),{target:{value:'knee'}});
   expect(screen.getByText('Days 0–7 · Early mobility')).toBeInTheDocument();
-  expect(screen.getByText(/knee bending, straightening/)).toBeInTheDocument();
+  expect(screen.getByText(/Which range-of-motion and strengthening exercises/)).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Type of operation'),{target:{value:'bypass'}});
   expect(screen.getByText('Weeks 2–6 · Gradual activity')).toBeInTheDocument();
-  expect(screen.getByText(/sternum if sternotomy/)).toBeInTheDocument();
+  expect(screen.getByText(/Chest-bone and upper-body precautions/)).toBeInTheDocument();
   expect(screen.queryByText('Days 0–7 · Early mobility')).not.toBeInTheDocument();
  });
  it('uses surgery date to highlight the applicable educational stage',()=>{
