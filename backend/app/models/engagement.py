@@ -44,3 +44,10 @@ class PatientAppointment(PatientRecord, Base):
     place: Mapped[str | None] = mapped_column(String(180))
     notes: Mapped[str | None] = mapped_column(String(500))
     __tablename__ = "patient_appointments"
+
+class EmergencyMedicalCard(PatientRecord, Base):
+    __tablename__ = "emergency_medical_cards"
+    allergies: Mapped[list] = mapped_column(JSON, default=list)
+    conditions: Mapped[list] = mapped_column(JSON, default=list)
+    note: Mapped[str | None] = mapped_column(String(700))
+    __table_args__ = (Index("ix_emergency_card_unique_patient", "patient_id", unique=True),)
