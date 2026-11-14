@@ -2,7 +2,7 @@ import {useEffect,useState} from 'react';
 import {Link,Navigate,Route,Routes,useLocation} from 'react-router-dom';
 import {Activity,ArrowRight,HeartPulse,KeyRound,LockKeyhole,ShieldAlert} from 'lucide-react';
 import {SessionProvider} from './hooks/session';
-import {createClient} from './services/client';
+import {ApiError,createClient} from './services/client';
 import {patientsApi} from './services/patients';
 import type {Patient} from './types/api';
 import {Shell} from './components/Shell';
@@ -25,18 +25,15 @@ function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
   e.preventDefault();if(!token.trim())return;
   setWorking(true);setError('');
   try{
-   // Hosted shared demo accepts a role suffix; local DEMO_TOKENS expects the raw token.
-   // Try the hosted form first, then the original token if and only if auth rejects it.
-   const hostedCredential=token.trim()+':'+persona;
-   let credential=hostedCredential;
-   let patient:Patient;
-   try{patient=await patientsApi(createClient(hostedCredential)).me()}
-   catch(e){
-    if(!(e instanceof Error) || !('status' in e) || e.status!==401)throw e;
-    credential=token.trim();
-    patient=await patientsApi(createClient(credential)).me();
+   const accessCode=token.trim();
+   const hostedCredential=accessCode+':'+persona;
+   try{
+    onLogin(hostedCredential,await patientsApi(createClient(hostedCredential)).me());
+   }catch(e){
+    // Local demo tokens omit the hosted role suffix.
+    if(!(e instanceof ApiError)||e.status!==401)throw e;
+    onLogin(accessCode,await patientsApi(createClient(accessCode)).me());
    }
-   onLogin(credential,patient);
   }
   catch(e){setError(e instanceof Error?e.message:'Unable to connect.')}
   finally{setWorking(false)}
