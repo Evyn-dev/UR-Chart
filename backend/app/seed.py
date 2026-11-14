@@ -9,7 +9,7 @@ from sqlalchemy import select
 
 from app.config import Settings
 from app.database import make_engine, session_factory
-from app.models import Patient, RecoveryPlan, Medication, MedicationLog, MedicationSchedule, Checkin, Alert, PatientAppointment
+from app.models import Patient, RecoveryPlan, Medication, MedicationLog, MedicationSchedule, Checkin, Alert, PatientAppointment, EmergencyMedicalCard
 from app.services.medications import replace_schedule, occurrences, utc
 
 PLACEHOLDER_PLAN = "This is fictional demonstration content. Your care team provides your recovery instructions."
@@ -205,6 +205,14 @@ def seed(settings):
                             symptoms=entry["symptoms"], symptom_reports=[], note=entry["note"],
                         ))
                 seed_sample_alert(db, patient, today)
+                demo_card = db.scalar(select(EmergencyMedicalCard).where(
+                    EmergencyMedicalCard.patient_id == patient.id))
+                if demo_card is None:
+                    db.add(EmergencyMedicalCard(patient_id=patient.id,
+                        allergies=["Not documented in this fictional record"],
+                        conditions=["Coronary artery disease (fictional)", "High blood pressure (fictional)",
+                                    "High cholesterol (fictional)", "CABG surgery 2026-10-29 (fictional)"],
+                        note="Entirely fictional demonstration data. Confirm all actual allergies and conditions with the treating care team."))
                 # Add one future fictional visit in the new appointments view when applicable.
                 planned_visit = datetime(2026, 11, 20, 10, 0, tzinfo=ZoneInfo(patient.timezone)).astimezone(timezone.utc)
                 if planned_visit > current_time:
