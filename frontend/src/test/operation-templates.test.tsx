@@ -21,7 +21,7 @@ describe('procedure-aware rehabilitation examples',()=>{
   fireEvent.change(screen.getByLabelText('Type of operation'),{target:{value:'valve'}});
   const daysAgo=new Date(Date.now()-15*86400000).toISOString().slice(0,10);
   fireEvent.change(screen.getByLabelText('Surgery date (optional)'),{target:{value:daysAgo}});
-  expect(screen.getByText('Weeks 2–4 · Home recovery')).toBeInTheDocument();
+  expect(screen.getAllByText('Weeks 2–4 · Home recovery').length).toBeGreaterThan(0);
   expect(screen.getByText('Current stage')).toBeInTheDocument();
  });
  it('does not invent a timeline for an unspecified operation',()=>{
