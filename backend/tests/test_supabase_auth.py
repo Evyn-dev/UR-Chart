@@ -55,6 +55,11 @@ def test_auth_outage_fails_closed(monkeypatch):
     assert exc.value.status_code == 503
 
 
-def test_demo_bearer_never_enabled_in_production():
-    with pytest.raises(ValueError):
-        Settings(_env_file=None, app_env="production", demo_auth_enabled=True)
+@pytest.mark.parametrize("demo_settings", [
+    {"demo_auth_enabled": True},
+    {"hosted_demo_code_hash": "a" * 64},
+    {"demo_tokens": {"b" * 40: "synthetic-user"}},
+])
+def test_all_demo_authentication_is_forbidden_in_production(demo_settings):
+    with pytest.raises(ValueError, match="demo authentication"):
+        Settings(_env_file=None, app_env="production", **demo_settings)
