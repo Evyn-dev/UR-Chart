@@ -1,0 +1,50 @@
+/* UR Chart recovery suite: accessible, responsive white/ocean-blue supporting pages */
+.eng-page{max-width:1080px;margin:0 auto;padding-bottom:36px;color:#17304a}
+.eng-intro{padding:8px 0 20px}
+.eng-intro h1{font-size:clamp(28px,3vw,39px);font-weight:800;margin:4px 0 8px;color:#17304a}
+.eng-intro p{max-width:800px;color:#4c6477;font-size:15px}
+.eng-page .eng-panel{border:1px solid #dce8ef;background:#fff;border-radius:17px;padding:clamp(16px,2vw,26px);margin:16px 0;box-shadow:0 5px 20px rgba(24,65,98,.06);color:#17304a}
+.eng-panel h2{font-size:19px;color:#17304a;margin-bottom:12px}
+.eng-panel h3{font-size:15px;color:#17304a;margin:15px 0 8px}
+.eng-panel p,.eng-panel li{color:#405c70;line-height:1.65}
+.eng-panel strong,.eng-panel b{color:#17304a}
+.eng-panel svg{vertical-align:middle}
+.eng-panel small{color:#526c80}
+.eng-panel a:not(.btn){color:#156b98;font-weight:700;text-decoration:underline}
+.eng-disclaimer{display:flex;align-items:center;gap:9px;background:#eef4f9;color:#355a74;padding:11px 14px;border:1px solid #c7dae6;border-radius:12px;font-size:13px}
+.eng-disclaimer svg{flex-shrink:0}
+.eng-emergency{background:#fff1f0;border:2px solid #be5451;border-radius:18px;padding:20px 24px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;color:#892d30}
+.eng-emergency>svg{flex-shrink:0;color:#a63638}
+.eng-emergency>div{flex:1 1 310px}
+.eng-emergency h2{color:#8d2e32;margin:0 0 5px}
+.eng-emergency p{color:#803d3e;margin:0;line-height:1.5}
+.eng-call{display:inline-flex;gap:9px;align-items:center;justify-content:center;min-height:52px;padding:12px 25px;background:#b5282d;color:#fff!important;border-radius:12px;font-weight:800;text-decoration:none!important}
+.eng-call:hover{background:#941d23}
+.eng-call:focus-visible{outline:3px solid #2168a5;outline-offset:3px}
+.eng-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0}
+.eng-actions .btn{display:inline-flex;align-items:center;gap:7px;min-height:44px}
+.eng-page .btn.primary{background:#2168a5;color:#fff;border-color:#2168a5}
+.eng-page .btn.secondary{background:#eaf3fa;color:#165579;border:1px solid #c4ddea}
+.eng-page .btn.secondary:hover{background:#dcecf7}
+.eng-event{border:1px solid #dce8ef;background:#f9fcfe;border-radius:13px;padding:16px;margin:12px 0}
+.eng-event>div:first-child{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.eng-event small{display:block;color:#526c80;font-size:12px}
+.eng-event p{margin:8px 0}
+.eng-contact{padding:14px;margin:12px 0;border:1px solid #dce8ef;background:#f6fbfd;border-radius:13px;display:grid;gap:8px}
+.eng-contact small{display:block}
+.eng-contact .btn{width:fit-content}
+.eng-form{display:grid;gap:14px;max-width:590px}
+.eng-form input,.eng-form textarea,.eng-contact input{color:#17304a;background:#fff;border:1px solid #9fb8c9}
+.eng-form label,.eng-contact label{color:#35546b;font-weight:700}
+.eng-form label input,.eng-form label textarea{margin-top:6px}
+.eng-form .btn{width:fit-content}
+.eng-banner{padding:12px 16px;background:#e1f4ed;border:1px solid #88bda9;color:#155543;border-radius:11px;margin:10px 0}
+.eng-banner.eng-error{background:#fff1f1;border-color:#e7b1b1;color:#963e3e}
+.eng-timeline{position:relative;border-left:3px solid #9bbfda;margin:16px 0 22px 15px}
+.eng-timeline article{position:relative;margin:0 0 12px 22px;padding:14px 18px;background:#fff;border:1px solid #dce8ef;border-radius:13px}
+.eng-milestone-dot{position:absolute;left:-32px;top:16px;width:17px;height:17px;border-radius:50%;background:#168a98;border:3px solid #fff;box-shadow:0 0 0 2px #168a98}
+.eng-timeline strong{font-weight:800;color:#17304a}
+.eng-timeline p{margin:4px 0;color:#526c80;font-size:13px}
+.eng-page ul{padding-left:22px}
+@media(max-width:600px){.eng-emergency{padding:15px}.eng-call{width:100%}.eng-page .eng-panel{padding:15px}.eng-actions .btn{width:100%;justify-content:center}}
+@media print{.sidebar,.topbar,.site-footer,.clara-launcher,.clara-window,.eng-actions,.eng-page>button,.eng-disclaimer{display:none!important}.workspace,.main-content,.eng-page,.eng-panel{background:#fff!important;color:#000!important;box-shadow:none!important}.eng-print .eng-panel{border:0!important;padding:0!important}.eng-page .eng-intro{display:none}}
