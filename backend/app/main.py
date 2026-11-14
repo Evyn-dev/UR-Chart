@@ -22,6 +22,7 @@ def create_app(settings=None, engine=None, provider=None):
     app.state.settings = settings
     app.state.sessions = session_factory(engine)
     app.state.ai = provider or build_provider(settings)
+
     app.add_middleware(CORSMiddleware, allow_origins=settings.allowed_origins, allow_credentials=False, allow_methods=["GET", "POST", "PATCH"], allow_headers=["Authorization", "Content-Type"])
     install_errors(app)
     for module in (patients, medications, checkins, alerts, chat, health, caregivers, corrections):

@@ -17,6 +17,18 @@ function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
  const [token,setToken]=useState('');
  const [persona,setPersona]=useState<'patient'|'caregiver'>('patient');
  const [working,setWorking]=useState(false);
+ const [presentationEnabled,setPresentationEnabled]=useState(false);
+ useEffect(()=>{let active=true;fetch('/api/demo/access',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(active)setPresentationEnabled(j?.data?.enabled===true)}).catch(()=>{});return()=>{active=false}},[]);
+ async function enterPresentation(role:'patient'|'caregiver'){
+  setWorking(true);setError('');
+  try{
+   const credential='urchart-presentation:'+role;
+   const p=await patientsApi(createClient(credential)).me();
+   onLogin(credential,p);
+  }catch(e){setError(e instanceof Error?e.message:'Unable to open presentation demo.')}
+  finally{setWorking(false)}
+ }
+
  const [error,setError]=useState('');
  async function submit(e:React.FormEvent){
   e.preventDefault();if(!token.trim())return;
@@ -48,7 +60,13 @@ function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
     <div className="mon-features"><span><Activity size={16}/> Daily recovery tracking</span><span><ShieldAlert size={16}/> Clear safety guidance</span></div>
    </section>
    <section className="mon-card" aria-label="Sign in">
-    <form onSubmit={submit} className="entry-form">
+    {presentationEnabled?<div className="entry-form">
+      <h2>Explore the fictional recovery demo</h2>
+      <p>Open a ready-to-use demonstration. No email or access code required.</p>
+      <button type="button" className="btn primary wide" disabled={working} onClick={()=>enterPresentation("patient")}>Enter as Patient <ArrowRight size={18}/></button>
+      <button type="button" className="btn wide" disabled={working} onClick={()=>enterPresentation("caregiver")}>Enter as Caregiver <ArrowRight size={18}/></button>
+      {error&&<div role="alert" className="feedback error">{error}</div>}
+    </div>:<form onSubmit={submit} className="entry-form">
      <label htmlFor="demo-token">Demo access code</label>
      <div className="field-with-icon"><KeyRound size={18}/><input id="demo-token" value={token} onChange={e=>setToken(e.target.value)} type="password" autoComplete="off" placeholder="Enter your demo code" required/></div>
      <label htmlFor="demo-persona" style={{marginTop:12}}>Demo role</label>
@@ -57,8 +75,8 @@ function DemoLogin({onLogin}:{onLogin:(token:string,patient:Patient)=>void}){
      </select>
      {error&&<div role="alert" className="feedback error">{error}</div>}
      <button className="btn primary wide" disabled={working} type="submit">{working?'Connecting…':'Enter recovery dashboard'}<ArrowRight size={18}/></button>
-    </form>
-    <p className="entry-foot"><LockKeyhole size={14}/> No email required. Shared fictional patient for demonstration only. Anyone holding the code can access its records. Never enter real health data.</p>
+    </form>}
+    <p className="entry-foot"><LockKeyhole size={14}/> Fictional training records only. No real patients, clinical monitoring, or emergency notifications. Never enter real health data.</p>
    </section>
   </main>
   <div className="mon-trace"><EcgTrace/><div className="mon-readout"><HeartPulse size={34}/><b>72</b><span>BPM · SAMPLE DISPLAY</span></div></div>
