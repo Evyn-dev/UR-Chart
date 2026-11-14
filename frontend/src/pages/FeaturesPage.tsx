@@ -35,14 +35,14 @@ export function FeaturesPage({guest=false}:{guest?:boolean}){
       <h1>All your recovery tools, <span>in one place.</span></h1>
       <p>Explore what's built for our synthetic cardiovascular recovery demonstration. Sign in to use connected tools after the demo API is configured.</p>
     </div>
-    <div className="feature-important" role="note"><LockKeyhole size={20}/><div><strong>Educational demonstration only.</strong> Not for actual patient information, real clinical decisions, or emergency monitoring. Features marked “Built · API required” depend on a working backend and demo account.</div></div>
+    <div className="feature-important" role="note"><LockKeyhole size={20}/><div><strong>Educational demonstration only.</strong> Not for actual patient information, real clinical decisions, or emergency monitoring. Sign in with your Supabase demo account to use implemented features. This is not clinical software.</div></div>
     {(['Track recovery','Care and support','Your account'] as const).map(category=><section key={category} className="feature-group" aria-label={category}>
       <h2>{category}</h2>
       <div className="feature-grid">
         {featureDirectory.filter(feature=>feature.category===category).map(feature=>{
           const Icon=feature.icon;
           return <article className="feature-tile" key={feature.title}>
-            <div className="feature-tile-top"><span className="feature-tile-icon"><Icon size={22}/></span><span className={'feature-status'+(feature.available?'':' feature-status-planned')}>{feature.available?'Built · API required':'Not connected'}</span></div>
+            <div className="feature-tile-top"><span className="feature-tile-icon"><Icon size={22}/></span><span className={'feature-status'+(feature.available?'':' feature-status-planned')}>{feature.available?'Built · Sign-in required':'Not connected'}</span></div>
             <h3>{feature.title}</h3><p>{feature.description}</p>
             <Link to={feature.destination} className="feature-tile-link">{feature.available?'Open feature':'View status'} <ArrowRight size={16}/></Link>
           </article>;
