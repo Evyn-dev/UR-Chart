@@ -1,5 +1,7 @@
 import secrets
 import hashlib
+import hmac
+import time
 from uuid import UUID
 
 import httpx
@@ -10,6 +12,64 @@ from sqlalchemy.exc import IntegrityError
 from app.models import Patient
 
 bearer = HTTPBearer(auto_error=False)
+
+PUBLIC_SESSION_PREFIX = "public-demo"
+PUBLIC_SESSION_SECONDS = 12 * 60 * 60
+
+
+def public_demo_secret(settings):
+    # Existing private secret material stays only on the backend; never return it.
+    if settings.hosted_demo_code_hash:
+        return settings.hosted_demo_code_hash.encode("ascii")
+    if settings.demo_auth_enabled and settings.demo_tokens:
+        return sorted(settings.demo_tokens)[0].encode("utf-8")
+    return None
+
+
+def public_demo_identity(settings, persona):
+    if persona == "caregiver":
+        return "synthetic-demo-caregiver"
+    if settings.hosted_demo_code_hash:
+        return "synthetic-demo-patient"
+    return settings.demo_tokens[sorted(settings.demo_tokens)[0]]
+
+
+def issue_public_demo_session(settings, persona):
+    if not settings.public_demo_enabled or settings.app_env not in {"development", "test"}:
+        raise HTTPException(404, "Public demo is unavailable")
+    if persona not in {"patient", "caregiver"}:
+        raise HTTPException(422, "Invalid demo role")
+    secret = public_demo_secret(settings)
+    if not secret:
+        raise HTTPException(503, "Public demo not configured")
+    issued = str(int(time.time()))
+    body = f"{PUBLIC_SESSION_PREFIX}.{persona}.{issued}"
+    digest = hmac.new(secret, body.encode("ascii"), hashlib.sha256).hexdigest()
+    return body + "." + digest
+
+
+def verify_public_demo_session(settings, token):
+    if not settings.public_demo_enabled or settings.app_env not in {"development", "test"}:
+        return None
+    parts = token.split(".")
+    if len(parts) != 4 or parts[0] != PUBLIC_SESSION_PREFIX or parts[1] not in {"patient", "caregiver"}:
+        return None
+    persona, issued, provided = parts[1:]
+    if not issued.isdecimal() or len(issued) > 15 or len(provided) != 64:
+        return None
+    now = int(time.time())
+    timestamp = int(issued)
+    if timestamp > now + 60 or now - timestamp > PUBLIC_SESSION_SECONDS:
+        return None
+    secret = public_demo_secret(settings)
+    if not secret:
+        return None
+    body = f"{PUBLIC_SESSION_PREFIX}.{persona}.{issued}"
+    expected = hmac.new(secret, body.encode("ascii"), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(expected, provided):
+        return None
+    return public_demo_identity(settings, persona)
+
 
 
 def get_db(request: Request):
@@ -24,6 +84,9 @@ def authenticated_identity(settings, credentials):
     if not credentials:
         raise HTTPException(401, "Valid bearer token required", headers={"WWW-Authenticate": "Bearer"})
     token = credentials.credentials
+    public_identity = verify_public_demo_session(settings, token)
+    if public_identity is not None:
+        return public_identity
     if settings.demo_auth_enabled:
         # In development only, role-suffixed demo credentials let the same
         # fictional access code open a separate caregiver identity.
