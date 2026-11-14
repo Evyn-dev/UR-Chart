@@ -19,9 +19,17 @@ class Settings(BaseSettings):
     ai_api_key: str = ""
     local_ai_model: str = "llama3.2:3b"
     risk_rules_file: str | None = None
+    live_caregiver_notifications: bool = False
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
+    twilio_from_number: str = ""
 
     @model_validator(mode="after")
     def secure_defaults(self):
+        if self.live_caregiver_notifications and self.app_env != "production":
+            raise ValueError("Live caregiver notifications require production configuration")
+        if self.live_caregiver_notifications and (self.demo_auth_enabled or self.hosted_demo_code_hash):
+            raise ValueError("Never deliver real caregiver notifications using shared demo authentication")
         if self.app_env == "production" and self.demo_auth_enabled:
             raise ValueError("Demo authentication is forbidden in production")
         if self.hosted_demo_code_hash and not re.fullmatch(r"[0-9a-f]{64}", self.hosted_demo_code_hash):
