@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import type {FormEvent} from 'react';
 import {HeartPulse,MessageCircle,Mic,MicOff,Send,X,Plus,Volume2,VolumeX,ShieldAlert,ChevronDown} from 'lucide-react';
-import {useLocation} from 'react-router-dom';
+import {Link,useLocation} from 'react-router-dom';
 import {useSession} from '../hooks/session';
 import {chatApi} from '../services/chat';
 import type {Message} from '../types/api';
@@ -166,7 +166,7 @@ export function ClaraAssistant(){
     const phrase=event.results[i][0]?.transcript?.trim()||'';
     if(!phrase||greetingActive.current)continue;
     const lower=phrase.toLowerCase();
-    if(/^emergency([\s.!?,]|$)/i.test(phrase)){showEmergency();return}
+    if(/^(?:chart\s+emergency|emergency)([\s.!?,]|$)/i.test(phrase)){showEmergency();return}
     // The wake phrase and name have replaced "Chart Chart".
     const match=/\bclara\b/i.exec(phrase);
     if(match){
@@ -241,7 +241,7 @@ export function ClaraAssistant(){
      </div>}
      {emergency&&<div className="clara-emergency" role="alert">
        <strong>Emergency guidance</strong>
-       <p>If this is a real emergency, call local emergency services now (911 in the US). Clara cannot dispatch emergency help or monitor your condition.</p>
+       <p>If this is a real emergency, call local emergency services now (911 in the US). Clara cannot dispatch emergency help or monitor your condition.</p><p><Link to="/recovery-tools#emergency" onClick={()=>setOpen(false)}>Open Emergency Connect demo preview</Link></p>
        <button type="button" onClick={()=>setEmergency(false)}>Dismiss</button>
      </div>}
      <div className="clara-chat-scroll" aria-live="polite">

@@ -1,7 +1,7 @@
 import {Link} from 'react-router-dom';
 import {
   Activity, ArrowRight, CalendarDays, ChartNoAxesCombined, HeartHandshake,
-  House, LockKeyhole, MessageCircle, Pill, Settings, ShieldAlert, Stethoscope
+  House, LockKeyhole, MessageCircle, Pill, Settings, ShieldAlert, Stethoscope, Sun
 } from 'lucide-react';
 import type {LucideIcon} from 'lucide-react';
 
@@ -15,6 +15,7 @@ type Feature = {
 };
 
 export const featureDirectory:Feature[] = [
+  {title:'Recovery tools suite',description:'Daily Clara briefing, emergency demo, visit preparation, recovery milestones and caregiver links.',destination:'/recovery-tools',icon:Sun,available:true,category:'Track recovery'},
   {title:'Recovery overview',description:'A daily dashboard for your check-ins, scheduled doses, trends and active demo alerts.',destination:'/',icon:House,available:true,category:'Track recovery'},
   {title:'Medication management',description:'Record prescribed medications, daily schedules, doses, corrections and refill awareness.',destination:'/medications',icon:Pill,available:true,category:'Track recovery'},
   {title:'Daily check-ins',description:'Log your own wellbeing, pain, symptoms and activity, then correct earlier entries.',destination:'/check-in',icon:Activity,available:true,category:'Track recovery'},
